@@ -4,6 +4,7 @@ import { LanguageProvider } from '@/lib/i18n';
 import { AnalyticsScripts } from '@/components/analytics/AnalyticsScripts';
 import { Providers } from '@/components/providers';
 
+export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'AMR Home Solutions | Co-Living Room Rentals in KL',
   description: 'Find your perfect room in Malaysia — fully furnished, move-in ready. AI-powered rental platform with 24/7 AIrene support.',
