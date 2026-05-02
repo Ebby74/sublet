@@ -56,6 +56,14 @@ export interface Payment {
   leaseId: string | null;
   tenantId: string | null;
   category: string | null;
+  incomeSource?: string | null;
+  tenant?: { name: string; email?: string | null; phone?: string | null } | null;
+  lease?: {
+    room?: {
+      floor?: { property?: { name?: string } | null } | null;
+    } | null;
+    tenant?: { name: string } | null;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 }
