@@ -1,4 +1,5 @@
 import tseslint from 'typescript-eslint';
+
 export default tseslint.config(
   {
     ignores: ['.next/**', 'node_modules/**'],
@@ -12,6 +13,7 @@ export default tseslint.config(
       '@typescript-eslint/no-empty-object-type': 'warn',
       '@typescript-eslint/no-unsafe-declaration-merging': 'warn',
       'prefer-const': 'warn',
+      '@typescript-eslint/ban-ts-comment': 'warn',
     },
   }
 );
