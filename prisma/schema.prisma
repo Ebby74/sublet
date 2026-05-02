@@ -1,0 +1,381 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String?
+  password  String
+  role      String    @default("user") // admin, moderator, user, jv
+  jvProperties String? // JSON array of property IDs assigned to JV user
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  properties          Property[]
+  tenants             Tenant[]
+  notifications       Notification[]
+  marketingChannels  MarketingChannel[]
+  leases             Lease[]
+  payments           Payment[]
+  prospects          Prospect[]
+  
+  @@index([email])
+  @@index([role])
+  @@index([deletedAt])
+}
+
+model Property {
+  id        String    @id @default(uuid())
+  name      String
+  address   String
+  type      String    @default("apartment") // apartment, house, condo, commercial
+  latitude  Float?
+  longitude  Float?
+  googlePlaceId String?
+  amenities String?   // JSON array of amenities
+  status    String    @default("active") // active, inactive, archived
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jvStakeholderId String?
+  jvSplit   Float?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  floors    Floor[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Floor {
+  id         String    @id @default(uuid())
+  propertyId String
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name       String    // "G Floor", "1st Floor", "2nd Floor"
+  level      Int       // -1 for G/F, 0 for ground, 1, 2, etc.
+  status     String    @default("active") // active, inactive
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  rooms      Room[]
+
+  @@index([propertyId])
+  @@index([level])
+}
+
+model Room {
+  id         String    @id @default(uuid())
+  floorId    String
+  floor      Floor     @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  name       String    // "Master Bedroom", "Room G1"
+  type       String    @default("single") // master, single, shared
+  beds       Int       @default(1)
+  baths      Int       @default(1)
+  areaSqft   Int?
+  rentSen    Int       // Monthly rent in sen
+  depositSen Int?
+  photos     String?   // JSON array of media URLs
+  videos     String?   // JSON array of video URLs
+  status     String    @default("draft") // draft, active, rented, maintenance, listed
+  description String?
+  descriptionV2 String?
+  descriptionHistory String?
+  caption    String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  vacantSince       DateTime?  // When room became vacant
+  lastRentedAt      DateTime?  // Last rental end date
+  vacancyNotes      String?    // AI analysis notes
+  maintenanceCostSen Int?      // Monthly maintenance cost
+  legacyPropertyId  String?    // For migration
+
+  marketingPosts   MarketingPost[]
+  prospects        Prospect[]
+  viewings         Viewing[]
+  offers           Offer[]
+  leases           Lease[]
+  chatSessions     ChatSession[]
+
+  @@index([floorId])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([vacantSince])
+}
+
+model Lease {
+  id              String    @id @default(uuid())
+  startDate       DateTime
+  endDate         DateTime
+  monthlyRentSen  Int
+  depositSen      Int       @default(0)
+  status          String    @default("active") // active, expired, terminated
+  roomId          String
+  room            Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  legacyPropertyId String?
+
+  payments        Payment[]
+  damageReports   DamageReport[]
+  exitProcess     ExitProcess?
+
+  @@index([roomId])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Payment {
+  id              String    @id @default(uuid())
+  type            String    // income or expense
+  amountSen       Int
+  description     String?
+  referenceNumber String?
+  paidAt          DateTime?
+  dueDate         DateTime?
+  status          String    @default("pending") // pending, paid, overdue, cancelled
+  leaseId         String?
+  lease           Lease?    @relation(fields: [leaseId], references: [id])
+  roomId          String?
+  tenantId        String?
+  tenant          Tenant?   @relation(fields: [tenantId], references: [id])
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
+  category        String?
+  incomeSource    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  @@index([incomeSource])
+  @@index([leaseId])
+  @@index([roomId])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([paidAt])
+  @@index([deletedAt])
+}
+
+model Tenant {
+  id        String    @id @default(uuid())
+  name      String
+  email     String?
+  phone     String?
+  icNumber  String?
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  leases   Lease[]
+  payments Payment[]
+
+  @@index([userId])
+  @@index([deletedAt])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  type      String    // payment_due, payment_overdue, lease_expiry, lease_expired
+  title     String
+  message   String
+  data      String?
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model MarketingChannel {
+  id        String   @id @default(uuid())
+  channel   String   // instagram, facebook, whatsapp, website
+  enabled   Boolean  @default(false)
+  config    String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, channel])
+  @@index([userId])
+}
+
+model MarketingPost {
+  id          String   @id @default(uuid())
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId      String
+  channel     String
+  content     String?
+  mediaUrl    String?
+  postId      String?
+  status      String   @default("pending") // pending, published, failed
+  error       String?
+  postedAt    DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([roomId])
+  @@index([userId])
+  @@index([channel])
+  @@index([status])
+}
+
+model Prospect {
+  id          String   @id @default(uuid())
+  name        String
+  email       String?
+  phone       String?
+  source      String?
+  utmData     String?
+  status      String   @default("new")
+  roomId      String?
+  room        Room?    @relation(fields: [roomId], references: [id])
+  notes       String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  viewings    Viewing[]
+  offers      Offer[]
+  chatSessions ChatSession[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([source])
+  @@index([roomId])
+  @@index([createdAt])
+}
+
+model Viewing {
+  id          String    @id @default(uuid())
+  roomId      String
+  room        Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  prospectId  String
+  prospect    Prospect  @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  scheduledAt DateTime
+  status      String    @default("scheduled")
+  result      String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([roomId])
+  @@index([prospectId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model Offer {
+  id           String    @id @default(uuid())
+  roomId       String
+  room         Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  prospectId   String
+  prospect     Prospect  @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  amountSen    Int
+  moveInDate   DateTime
+  status       String    @default("pending")
+  evaluatedBy  String?
+  letter       Bytes?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([roomId])
+  @@index([prospectId])
+  @@index([status])
+}
+
+model DamageReport {
+  id             String    @id @default(uuid())
+  leaseId        String
+  lease          Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  reportedAt     DateTime  @default(now())
+  reporterName   String?
+  damageType     String    // structural, electrical, plumbing, furniture, cleaning, other
+  severity       String    @default("minor") // minor, moderate, major, critical
+  description    String
+  photos         String?   // JSON array of photo URLs
+  estimatedCostSen Int?
+  actualCostSen  Int?
+  status         String    @default("reported") // reported, assessed, approved, repaired, disputed
+  repairNotes    String?
+  repairedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([leaseId])
+  @@index([status])
+  @@index([damageType])
+  @@index([severity])
+}
+
+model ChatSession {
+  id           String    @id @default(uuid())
+  prospectId   String?
+  prospect     Prospect? @relation(fields: [prospectId], references: [id], onDelete: SetNull)
+  roomId       String?
+  room         Room?     @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  messages     String    // JSON array of {role, content, timestamp}
+  status       String    @default("active") // active, completed, abandoned
+  metadata     String?   // JSON: {step, userData, source, etc}
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([prospectId])
+  @@index([roomId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ExitProcess {
+  id               String    @id @default(uuid())
+  leaseId          String    @unique
+  lease            Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  initiatedAt      DateTime  @default(now())
+  initiatedBy      String?
+  expectedMoveOut  DateTime
+  actualMoveOut    DateTime?
+  status           String    @default("initiated") // initiated, inspection_scheduled, inspection_complete, final_payment_calculated, deposit_returned, completed, cancelled
+  checklistData    String?   // JSON: { walls, floor, ceiling, doors, windows, furniture, appliances, keys, cleanliness }
+  damagesFound     String?   // JSON array of damage report IDs
+  totalDeductionsSen Int    @default(0)
+  depositReturnSen Int?
+  finalPaymentSen  Int?
+  refundMethod     String?   // bank_transfer, cash, cheque
+  refundReference  String?
+  refundDate       DateTime?
+  notes            String?
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([leaseId])
+  @@index([status])
+  @@index([expectedMoveOut])
+}

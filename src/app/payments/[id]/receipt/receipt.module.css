@@ -1,0 +1,122 @@
+/**
+ * Receipt Page Styles
+ */
+
+/* Container */
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 20px;
+}
+
+/* Action Bar */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 800px;
+  margin: 0 auto 20px;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  min-height: 44px; /* D-06: 44px touch target */
+  min-width: 44px;
+  color: #0066cc;
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.printButton,
+.pdfButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  min-height: 44px; /* D-06: 44px touch target */
+  min-width: 44px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.printButton {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.printButton:hover {
+  background: #e0e0e0;
+}
+
+.pdfButton {
+  background: #0066cc;
+  color: white;
+}
+
+.pdfButton:hover {
+  background: #0055aa;
+}
+
+/* Receipt Wrapper */
+.receiptWrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Print Styles */
+@media print {
+  .actions {
+    display: none;
+  }
+
+  .container {
+    background: white;
+    padding: 0;
+  }
+
+  .receiptWrapper {
+    max-width: none;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .actionButtons {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .printButton,
+  .pdfButton {
+    flex: 1;
+    justify-content: center;
+  }
+}

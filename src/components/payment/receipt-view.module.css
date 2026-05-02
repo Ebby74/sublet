@@ -1,0 +1,461 @@
+/**
+ * Receipt View Styles
+ * 
+ * A4-optimized styling for receipt display and printing.
+ * Uses CSS variables from Tailwind theme.
+ */
+
+/* Receipt Container */
+.receipt {
+  --receipt-max-width: 210mm;
+  --receipt-padding: 20mm;
+  --receipt-bg: #ffffff;
+  --receipt-text: #1a1a1a;
+  --receipt-muted: #666666;
+  --receipt-border: #e5e5e5;
+  --receipt-accent: #0066cc;
+  --receipt-success: #16a34a;
+  --receipt-warning: #f59e0b;
+  --receipt-danger: #dc2626;
+
+  max-width: var(--receipt-max-width);
+  margin: 0 auto;
+  padding: var(--receipt-padding);
+  background: var(--receipt-bg);
+  color: var(--receipt-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 12pt;
+  line-height: 1.5;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--receipt-border);
+}
+
+.companyInfo {
+  flex: 1;
+}
+
+.companyName {
+  font-size: 18pt;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--receipt-text);
+}
+
+.companyTagline {
+  font-size: 10pt;
+  color: var(--receipt-muted);
+  margin: 0;
+}
+
+.receiptTitle {
+  text-align: right;
+}
+
+.receiptTitle h2 {
+  font-size: 24pt;
+  font-weight: 700;
+  margin: 0;
+  color: var(--receipt-accent);
+  letter-spacing: 2px;
+}
+
+/* Meta Section */
+.meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+.metaItem {
+  display: flex;
+  gap: 8px;
+}
+
+.metaLabel {
+  font-weight: 600;
+  color: var(--receipt-muted);
+}
+
+.metaValue {
+  font-weight: 500;
+  color: var(--receipt-text);
+}
+
+/* Sections */
+.section {
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 10pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--receipt-muted);
+  margin: 0 0 8px 0;
+}
+
+/* Bill To */
+.billTo {
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 4px;
+  border-left: 3px solid var(--receipt-accent);
+}
+
+.tenantName {
+  font-size: 14pt;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.tenantIc {
+  font-size: 11pt;
+  color: var(--receipt-muted);
+  margin: 0;
+}
+
+/* Property Info */
+.propertyInfo {
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.propertyAddress {
+  font-size: 11pt;
+  color: var(--receipt-muted);
+  margin: 0;
+}
+
+/* Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.table thead th {
+  text-align: left;
+  padding: 10px 12px;
+  background: #f5f5f5;
+  font-weight: 600;
+  font-size: 10pt;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--receipt-border);
+}
+
+.table tbody td {
+  padding: 12px;
+  border-bottom: 1px solid var(--receipt-border);
+}
+
+.amountColumn {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+.table tfoot td {
+  padding: 12px;
+  font-weight: 600;
+  border-top: 2px solid var(--receipt-border);
+}
+
+.totalLabel {
+  font-size: 14pt;
+  font-weight: 700;
+}
+
+.totalAmount {
+  font-size: 16pt;
+  font-weight: 700;
+  color: var(--receipt-accent);
+}
+
+/* Status Section */
+.statusSection {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 11pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statusBadge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statusBadge.paid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.statusBadge.overdue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.statusBadge.cancelled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Footer */
+.footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--receipt-border);
+  text-align: center;
+}
+
+.thankYou {
+  font-size: 12pt;
+  font-weight: 500;
+  color: var(--receipt-text);
+  margin: 0 0 8px 0;
+}
+
+.footerNote {
+  font-size: 9pt;
+  color: var(--receipt-muted);
+  margin: 0;
+}
+
+/* PDF Mode Adjustments */
+.receipt.pdf {
+  padding: 15mm;
+  font-size: 11pt;
+}
+
+.receipt.pdf .header {
+  margin-bottom: 16px;
+}
+
+.receipt.pdf .companyName {
+  font-size: 16pt;
+}
+
+.receipt.pdf .receiptTitle h2 {
+  font-size: 20pt;
+}
+
+/* Print Styles */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  .receipt {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 15mm;
+    border: none;
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .meta {
+    margin-bottom: 16px;
+    padding: 8px;
+  }
+
+  .section {
+    margin-bottom: 12px;
+  }
+
+  .table thead th {
+    background: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .statusBadge.paid {
+    background: #dcfce7 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .statusBadge.pending {
+    background: #fef3c7 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .statusBadge.overdue {
+    background: #fee2e2 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .footer {
+    margin-top: 20px;
+  }
+}
+
+/* Screen-only print button styling */
+@media screen {
+  .receipt:not(.pdf) {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+}
+
+/* Print-optimized styles - hide everything except receipt */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .receipt,
+  .receipt * {
+    visibility: visible;
+  }
+  
+  .receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 40px;
+    background: white;
+    color: black;
+    font-size: 12pt;
+  }
+  
+  /* Receipt dimensions for A4 */
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+  
+  /* Ensure print doesn't show extra pages */
+  .receipt {
+    page-break-inside: avoid;
+    max-height: 277mm; /* A4 height minus margins */
+  }
+  
+  /* Black and white friendly */
+  .header {
+    background: none !important;
+    border-bottom: 2px solid #000;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .companyName,
+  .receiptTitle h2 {
+    color: black !important;
+  }
+  
+  .statusBadge {
+    background: none !important;
+    border: 1px solid #000;
+    color: black !important;
+  }
+  
+  /* Hide elements not needed in print */
+  .receipt .no-print {
+    display: none !important;
+  }
+}
+
+/* PDF download button */
+.downloadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  min-height: 44px; /* D-06: 44px touch target */
+  min-width: 44px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.downloadButton:hover {
+  background: #1d4ed8;
+}
+
+.downloadButton:active {
+  background: #1e40af;
+}
+
+/* Print button */
+.printButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  min-height: 44px; /* D-06: 44px touch target */
+  min-width: 44px;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.printButton:hover {
+  background: #f9fafb;
+}
+
+.printButton:active {
+  background: #f3f4f6;
+}
+
+/* Button container */
+.buttonContainer {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .buttonContainer {
+    flex-direction: column;
+  }
+  
+  .downloadButton,
+  .printButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
