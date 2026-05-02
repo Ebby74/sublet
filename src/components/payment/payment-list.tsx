@@ -3,11 +3,11 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { formatCurrency, formatDate } from '@/lib/format';
-import type { PaymentWithRelations } from '@/services/payment-service';
-import { INCOME_SOURCES } from '@/services/payment-service';
+import type { Payment } from '@/types';
+import { INCOME_SOURCES } from '@/lib/payment-constants';
 
 interface PaymentListProps {
-  initialPayments?: PaymentWithRelations[];
+  initialPayments?: Payment[];
 }
 
 type FilterType = 'all' | 'income' | 'expense';
@@ -15,7 +15,7 @@ type FilterStatus = 'all' | 'pending' | 'paid' | 'overdue';
 type FilterIncomeSource = 'all' | 'sublet' | 'autoren_sell' | 'autoren_rent' | 'unallocated';
 
 export function PaymentList({ initialPayments = [] }: PaymentListProps) {
-  const [payments, setPayments] = useState<PaymentWithRelations[]>(initialPayments);
+  const [payments, setPayments] = useState<Payment[]>(initialPayments);
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [filterIncomeSource, setFilterIncomeSource] = useState<FilterIncomeSource>('all');
