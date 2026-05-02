@@ -1,0 +1,121 @@
+# Roadmap: AMR Home Solutions Property Agent Platform
+
+**Project:** AMR Home Solutions - Property Agent Platform  
+**Entity:** AMR Home Solutions (SSM registered sole proprietorship/enterprise)  
+**Generated:** 2026-04-05  
+**Last Updated:** 2026-04-16  
+**Granularity:** Coarse
+
+---
+
+## Business Units
+
+| Unit | Role | Revenue |
+|------|------|---------|
+| Sublet | Co-living rooms | Rental income from furnished rooms |
+| Autoren Sell | Property sales (future) | Commissions from selling properties |
+| Autoren Rent | Property rentals (future) | Commissions from rental referrals |
+
+**Core Business:** Co-living room rental with 100% AI automation funnel
+
+---
+
+## Milestones
+
+- ✅ **v1.0 MVP** — Phases 1-4 (shipped 2026-04-09)
+- ✅ **v1.1 Tax & Zakat + Auto Marketing** — Phases 5-6 (shipped 2026-04-09)
+- ✅ **v2.0 Multi-Income-Source Accounting** — Phases 7-11 (shipped 2026-04-15)
+- ✅ **v3.0 AI Automation Funnel** — Phases 12-18 (shipped 2026-04-24)
+
+**Note:** AMR Home Solutions is a sole proprietorship (enterprise) registered with SSM under the Registration of Businesses Act 1956. Not a company (Sdn Bhd) — no share capital, files Form B for personal income tax.
+
+---
+
+## Milestone Details
+
+<details>
+<summary>✅ v1.0 MVP (Phases 1-4) — SHIPPED 2026-04-09</summary>
+
+- [x] Phase 1: Foundation & Infrastructure (4/4 plans)
+- [x] Phase 2: Property & Tenant Management (3/3 plans)
+- [x] Phase 3: Financial Core (4/4 plans)
+- [x] Phase 4: Notifications & Polish (4/4 plans)
+
+**See:** `.planning/milestones/v1.0-ROADMAP.md` for full details
+
+</details>
+
+<details>
+<summary>✅ v1.1 Tax & Zakat + Auto Marketing (Phases 5-6) — SHIPPED 2026-04-09</summary>
+
+- [x] Phase 5: Malaysian Tax & Zakat (5/5 plans)
+- [x] Phase 6: Auto Marketing & Posting (6/6 plans)
+
+**See:** `.planning/milestones/v1.1-ROADMAP.md` for full details
+
+</details>
+
+<details>
+<summary>✅ v2.0 Multi-Income-Source Accounting (Phases 7-11) — SHIPPED 2026-04-15</summary>
+
+- [x] Phase 7: Business Breakdown (5/5 plans)
+- [x] Phase 8: Expense Allocation (5/5 plans)
+- [x] Phase 9: Per-Source Profit Reports (4/4 plans)
+- [x] Phase 10: Consolidated Financials (3/3 plans)
+- [x] Phase 11: SSM Export Templates (3/3 plans)
+
+**See:** `.planning/milestones/v2.0-ROADMAP.md` for full details
+
+</details>
+
+<details>
+<summary>✅ v3.0 AI Automation Funnel (Phases 12-18) — SHIPPED 2026-04-24</summary>
+
+- [x] Phase 12: Room Listings & Media (3/3 plans)
+- [x] Phase 13: AI Content Generation (3/3 plans)
+- [x] Phase 14: Marketing Distribution (2/2 plans)
+- [x] Phase 15: Prospect Inquiry Flow (3/3 plans)
+- [x] Phase 16: Offer Viewing System (3/3 plans)
+- [x] Phase 17: JV Stakeholder Portal (1/1 plan)
+- [x] Phase 18: Profit Sharing Engine (2/2 plans)
+
+**See:** `.planning/milestones/v3.0-ROADMAP.md` for full details
+
+</details>
+
+---
+
+## Phase Progress
+
+| Phase | Name | Milestone | Plans | Status | Completed |
+|-------|------|-----------|-------|--------|----------|
+| 1 | Foundation & Infrastructure | v1.0 | 4/4 | Complete | 2026-04-07 |
+| 2 | Property & Tenant Management | v1.0 | 3/3 | Complete | 2026-04-08 |
+| 3 | Financial Core | v1.0 | 4/4 | Complete | 2026-04-08 |
+| 4 | Notifications & Polish | v1.0 | 4/4 | Complete | 2026-04-09 |
+| 5 | Malaysian Tax & Zakat | v1.1 | 5/5 | Complete | 2026-04-09 |
+| 6 | Auto Marketing & Posting | v1.1 | 6/6 | Complete | 2026-04-09 |
+| 7 | Business Breakdown | v2.0 | 5/5 | Complete | 2026-04-14 |
+| 8 | Expense Allocation | v2.0 | 5/5 | Complete | 2026-04-15 |
+| 9 | Per-Source Profit Reports | v2.0 | 4/4 | Complete | 2026-04-15 |
+| 10 | Consolidated Financials | v2.0 | 3/3 | Complete | 2026-04-15 |
+| 11 | SSM Export Templates | v2.0 | 3/3 | Complete | 2026-04-15 |
+| 12 | Room Listings & Media | v3.0 | 3/3 | Complete | 2026-04-23 |
+
+---
+
+## What's Next
+
+*Ready to plan the next milestone*
+
+Use `/gsd-new-milestone` to start the next planning cycle.
+
+**Potential areas for future milestones:**
+- Loan Documentation (Phase 12)
+- Multi-user access
+- Payment gateway integration
+- Microsoft Graph API sync
+
+---
+
+_Last updated: 2026-04-16 after v2.0 milestone completion_
