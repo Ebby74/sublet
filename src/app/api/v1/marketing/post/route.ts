@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { socialPostingService } from '@/services/social-posting-service';
+import type { PostResult } from '@/services/social-posting-service';
 import { z } from 'zod';
 
 const postSchema = z.object({
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
 
   // Determine which platforms to post to
   const platformsToPost = platforms || ['instagram', 'facebook'];
-  const results = [];
+  const results: PostResult[] = [];
 
   for (const platform of platformsToPost) {
     if (platform === 'instagram') {
