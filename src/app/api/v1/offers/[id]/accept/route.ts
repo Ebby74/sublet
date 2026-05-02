@@ -18,7 +18,7 @@ export async function PATCH(
 
     const offer = await acceptOffer(id, 'admin');
 
-    let tenant = null;
+    let tenant: Awaited<ReturnType<typeof createTenantFromOffer>> | null = null;
     if (createTenant) {
       tenant = await createTenantFromOffer(id, userId);
     }
