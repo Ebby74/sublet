@@ -1,12 +1,9 @@
-import { getPayments } from '@/services/payment-service';
 import { PaymentList } from '@/components/payment/payment-list';
 import { Button } from '@/components/ui/button';
 import { getSession } from '@/lib/auth';
 
 export default async function PaymentsPage() {
-  const session = await getSession();
-  const userId = session?.user?.id ?? '';
-  const payments = await getPayments(userId);
+  await getSession();
 
   return (
     <div className="container py-8">
@@ -18,7 +15,7 @@ export default async function PaymentsPage() {
           </a>
         </div>
       </div>
-      <PaymentList initialPayments={payments} />
+      <PaymentList />
     </div>
   );
 }
