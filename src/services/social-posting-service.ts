@@ -15,7 +15,7 @@ interface PropertyData {
   type: string;
 }
 
-interface PostResult {
+export interface PostResult {
   success: boolean;
   postId?: string;
   platform: 'instagram' | 'facebook';
