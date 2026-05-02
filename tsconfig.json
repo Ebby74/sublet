@@ -40,6 +40,7 @@
     "node_modules",
     "export-reports.ts",
     "import-excel.ts",
-    "query-db.cjs"
+    "query-db.cjs",
+    "src/lib/r2.ts"
   ]
 }
