@@ -7,7 +7,7 @@ import { marketingTriggerService } from '@/services/marketing-trigger-service';
  * POST /api/v1/marketing/room-post
  * 
  * Trigger room marketing posts.
- * - Auto-trigger: when room becomes active
+ * - Auto-trigger: when room becomes available
  * - Manual: from UI button click
  */
 export async function POST(request: Request) {
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   if (manual) {
     result = await marketingTriggerService.manualRoomTrigger(user.id, roomId);
   } else {
-    result = await marketingTriggerService.onRoomActive(roomId);
+    result = await marketingTriggerService.onRoomAvailable(roomId);
   }
 
   return NextResponse.json({ data: result });
