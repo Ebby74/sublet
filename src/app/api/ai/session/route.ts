@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 
+// Prevent Next.js from trying to collect page data during build
+export const dynamic = 'force-dynamic';
+
 const SessionRequestSchema = z.object({
   sessionId: z.string().uuid().nullable().optional(),
   messages: z.array(
