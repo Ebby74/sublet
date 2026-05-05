@@ -502,7 +502,8 @@ export function PropertyForm({ userId, property }: PropertyFormProps) {
                 className="w-full border rounded-md px-3 py-2"
               >
                 <option value="draft">Draft</option>
-                <option value="active">Active</option>
+                <option value="available">Available</option>
+                <option value="maintenance">Maintenance</option>
                 <option value="rented">Rented</option>
               </select>
             </div>

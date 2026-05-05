@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRoom, updateRoomStatus } from '@/services/room-service';
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  draft: ['active'],
-  active: ['rented', 'draft'],
-  rented: [],
+  draft: ['available'],
+  available: ['listed', 'rented', 'maintenance'],
+  listed: ['available', 'rented', 'maintenance'],
+  rented: ['maintenance'],
+  maintenance: ['available'],
 };
 
 export async function PATCH(
@@ -26,7 +28,7 @@ export async function PATCH(
   const body = await request.json();
   const newStatus = body.status;
 
-  if (!newStatus || !['draft', 'active', 'rented'].includes(newStatus)) {
+  if (!newStatus || !['draft', 'available', 'listed', 'rented', 'maintenance'].includes(newStatus)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
 
@@ -40,6 +42,6 @@ export async function PATCH(
     );
   }
 
-  const updated = await updateRoomStatus(id, newStatus as 'draft' | 'active' | 'rented');
+  const updated = await updateRoomStatus(id, newStatus as 'draft' | 'available' | 'listed' | 'rented' | 'maintenance');
   return NextResponse.json({ data: updated });
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/format';
 import { Button } from '@/components/ui/button';
+import { Upload, Wrench, UserMinus } from 'lucide-react';
 
 interface RoomCardProps {
   room: {
@@ -54,7 +55,7 @@ export function RoomCard({ room, propertyId, onStatusChange }: RoomCardProps) {
 
       <p className="font-semibold text-lg mb-3">{formatCurrency(room.rentSen)}/mo</p>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Link href={`/properties/${propertyId}/rooms/${room.id}`}>
           <Button variant="outline" size="sm">View</Button>
         </Link>
@@ -63,20 +64,42 @@ export function RoomCard({ room, propertyId, onStatusChange }: RoomCardProps) {
         </Link>
         {room.status === 'draft' && onStatusChange && (
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={() => onStatusChange(room.id, 'available')}
           >
-            Make Available
+            <Upload className="h-3.5 w-3.5 mr-1" />
+            Publish
+          </Button>
+        )}
+        {room.status === 'maintenance' && onStatusChange && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => onStatusChange(room.id, 'available')}
+          >
+            <Upload className="h-3.5 w-3.5 mr-1" />
+            Publish
           </Button>
         )}
         {room.status === 'available' && onStatusChange && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onStatusChange(room.id, 'draft')}
+            onClick={() => onStatusChange(room.id, 'maintenance')}
           >
-            Hide
+            <Wrench className="h-3.5 w-3.5 mr-1" />
+            Maintenance
+          </Button>
+        )}
+        {room.status === 'rented' && onStatusChange && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onStatusChange(room.id, 'maintenance')}
+          >
+            <UserMinus className="h-3.5 w-3.5 mr-1" />
+            Tenant Moved Out
           </Button>
         )}
       </div>

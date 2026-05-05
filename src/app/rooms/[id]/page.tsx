@@ -2,7 +2,7 @@ import { getRoom } from '@/services/room-service';
 import { notFound } from 'next/navigation';
 import { InquiryForm } from '@/components/prospect/inquiry-form';
 import { PostHistoryPanel } from '@/components/ui/post-history-panel';
-import { RoomShareButtons } from '@/components/ui/room-share-buttons';
+import { ShareButton } from '@/components/ui/share-button';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -56,7 +56,7 @@ export default async function RoomDetailPage({ params }: PageProps) {
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[room.status] || statusColors.draft}`}>
                 {statusLabels[room.status] || room.status}
               </span>
-              <RoomShareButtons url={roomUrl} title={shareTitle} />
+              <ShareButton url={roomUrl} title={shareTitle} />
             </div>
           </div>
         </div>

@@ -264,10 +264,18 @@ describe('formatCurrency', () => {
 
 AIrene is the AI bot that handles ALL engagements from start to finish:
 - Responds to all inquiries
-- Qualifies prospects
+- Qualifies prospects (MUST verify: Malaysian, Muslim, eligible marital status, no children)
 - Schedules viewings
 - Handles offers
 - Manages exit process
+
+### AIrene Tenant Qualification Rules
+AIrene MUST verify these before proceeding with any inquiry:
+1. **Nationality:** Must be Malaysian — reject all others
+2. **Religion:** Must be Muslim — reject non-Muslims
+3. **Gender matching:** Muslimin prospects → male rooms only; Muslimah prospects → female rooms only
+4. **Marital status:** Single OK, married-separated OK, divorced-no-kids OK; married-together NOT OK, divorced-with-kids NOT OK
+5. **Children:** No children living with tenant — reject if yes
 
 All tenant/prospect engagements are automated. Admins only involved for:
 - Providing materials (photos/videos)
@@ -277,13 +285,52 @@ All tenant/prospect engagements are automated. Admins only involved for:
 
 ---
 
+## Room Concept & Tenant Eligibility
+
+### Co-Living Model
+- AMR Homes provides **co-living spaces** — tenants share living hall, kitchen, and bathroom/toilet
+- **Two room types:**
+  - **Single Room:** 1 bed, 1 tenant
+  - **Shared Room:** 2 single beds, max 2 tenants
+- **Contract:** 1-year lease, minimum 6 full months from 1st of the month
+- **Early exit:** Tenants who move out before completing 6 months forfeit their deposit
+- **Gender-segregated housing:** Separate living arrangements for Muslimin (men) and Muslimah (women)
+
+### Tenant Eligibility (ENFORCED)
+- **Nationality:** Malaysian only
+- **Religion:** Muslim only (Muslimin for male rooms, Muslimah for female rooms)
+- **Marital status:**
+  - Single (never married) — eligible
+  - Married but staying single away from spouse — eligible
+  - Divorced with no children living with tenant — eligible
+  - Married (living with spouse) — NOT eligible
+  - Divorced with children living with tenant — NOT eligible
+- **Children:** No children living with tenant
+
+### Room Status Workflow
+- `draft` → Room being set up (photos, description incomplete)
+- `available` → Room published and open for inquiries (click "Publish" to activate)
+- `listed` → Room being marketed on social media
+- `rented` → Tenant has moved in
+- `maintenance` → Room undergoing cleanup/repairs after tenant move-out
+- **Admin workflow:** Create as draft → Complete setup → Click "Publish" → Room becomes available
+- After tenant move-out: Room auto-goes to "maintenance" → Admin completes cleanup → Click "Publish" → Room available again
+
+### Sharing Behavior
+- Single "Share" button (not individual platform buttons)
+- Mobile: Uses native Web Share API (opens phone share sheet with WhatsApp, Instagram DM, etc.)
+- Desktop: Dropdown with WhatsApp, Facebook, Telegram, Copy Link
+- Pre-filled WhatsApp message: "Eh, nice room for rent! Check it out: [url]"
+
+---
+
 ## Target Users
 
 - **AMR Homes Admins:** Full access to everything (manage properties, tenants, finances, AI funnel)
 - **JV Stakeholders:** Let their property for AMR to sublet and manage. Their contribution is their properties. In return they get profit sharing portion. AMR Homes may also own properties and become a JV Stakeholder itself, subletting their own properties.
-- **Prospect Tenants:** Selective, all online fully automated via AIrene
+- **Prospect Tenants:** Malaysian Muslim only. Selective, all online fully automated via AIrene. Gender-segregated co-living (Muslimin/Muslimah sections).
 - **Property Owners (Future):** In next project, external property owners may contact to list properties for AMR Homes to sublet
 
 ---
 
-*Last updated: 2026-04-27*
+*Last updated: 2026-05-05*

@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import type { FC } from 'react';
 import { trackEvent, trackWhatsAppClick } from '@/lib/analytics';
-import { RoomShareButtons } from '@/components/ui/room-share-buttons';
+import { ShareButton } from '@/components/ui/share-button';
 
 interface User {
   id: string;
@@ -368,14 +368,13 @@ const LandingPage: FC = () => {
                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity">
                            <span className="bg-white text-slate-800 px-4 py-2 rounded-full font-medium text-sm">View Room</span>
                          </div>
-                          {/* Share Button on each room card */}
-                          <div className="absolute top-2 right-2 flex gap-1" onClick={(e) => e.preventDefault()}>
-                            <RoomShareButtons
-                              url={`https://sublet-zeta.vercel.app/rooms/${room.id}`}
-                              title={`${room.title} - ${room.price}`}
-                              size="sm"
-                            />
-                          </div>
+                           {/* Share Button on each room card */}
+                           <div className="absolute top-2 right-2" onClick={(e) => e.preventDefault()}>
+                             <ShareButton
+                               url={`https://sublet-zeta.vercel.app/rooms/${room.id}`}
+                               title={`${room.title} - ${room.price}`}
+                             />
+                           </div>
                        </div>
                      </a>
                    ))}
@@ -577,12 +576,12 @@ const LandingPage: FC = () => {
       {/* Social Sharing Section */}
       <section className="py-12 bg-white border-t border-slate-100">
         <div className="container mx-auto px-4 text-center">
-          <h4 className="text-xl font-bold text-slate-800 mb-6">Share with Friends & Family</h4>
+          <h4 className="text-xl font-bold text-slate-800 mb-2">Know someone looking for a room?</h4>
+          <p className="text-slate-500 mb-6">Share this listing with friends and family</p>
           <div className="flex justify-center">
-            <RoomShareButtons
+            <ShareButton
               url={typeof window !== 'undefined' ? window.location.href : ''}
               title="AMR Home Solutions - Find Your Perfect Room in KL"
-              size="md"
             />
           </div>
         </div>

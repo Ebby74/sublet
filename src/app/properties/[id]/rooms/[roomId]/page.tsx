@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { senToRinggit } from '@/lib/format';
+import { RoomStatusActions } from '@/components/room/room-status-actions';
 
 async function getRoomWithDetails(roomId: string) {
   const room = await prisma.room.findUnique({
@@ -68,15 +69,21 @@ export default async function RoomDetailPage({
             {room.beds} bed, {room.baths} bath {room.areaSqft ? `• ${room.areaSqft} sqft` : ''}
           </p>
         </div>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-          room.status === 'available' ? 'bg-green-100 text-green-700' :
-          room.status === 'rented' ? 'bg-blue-100 text-blue-700' :
-          room.status === 'maintenance' ? 'bg-orange-100 text-orange-700' :
-          room.status === 'listed' ? 'bg-yellow-100 text-yellow-700' :
-          'bg-gray-100 text-gray-700'
-        }`}>
-          {room.status === 'available' ? 'Available' : room.status === 'rented' ? 'Rented' : room.status === 'maintenance' ? 'Maintenance' : room.status === 'listed' ? 'Listed' : 'Draft'}
-        </span>
+        <div className="flex flex-col items-end gap-2">
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+            room.status === 'available' ? 'bg-green-100 text-green-700' :
+            room.status === 'rented' ? 'bg-blue-100 text-blue-700' :
+            room.status === 'maintenance' ? 'bg-orange-100 text-orange-700' :
+            room.status === 'listed' ? 'bg-yellow-100 text-yellow-700' :
+            'bg-gray-100 text-gray-700'
+          }`}>
+            {room.status === 'available' ? 'Available' : room.status === 'rented' ? 'Rented' : room.status === 'maintenance' ? 'Maintenance' : room.status === 'listed' ? 'Listed' : 'Draft'}
+          </span>
+          <RoomStatusActions
+            roomId={room.id}
+            status={room.status}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
