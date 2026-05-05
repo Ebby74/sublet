@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import type { FC } from 'react';
 import { trackEvent, trackWhatsAppClick } from '@/lib/analytics';
+import { RoomShareButtons } from '@/components/ui/room-share-buttons';
 
 interface User {
   id: string;
@@ -86,48 +87,11 @@ const leadMagnet = {
   icon: '📖',
 };
 
-// Social sharing configuration for Malaysian platforms
-const sharePlatforms = [
-  {
-    name: 'WhatsApp',
-    icon: '💬',
-    getUrl: (url: string, title: string) => url, // Placeholder, actual URL generated in handleShare
-    color: 'bg-green-500 hover:bg-green-600',
-  },
-  {
-    name: 'Facebook',
-    icon: '📘',
-    getUrl: (url: string, title: string) => url,
-    color: 'bg-blue-600 hover:bg-blue-700',
-  },
-  {
-    name: 'Telegram',
-    icon: '✈️',
-    getUrl: (url: string, title: string) => url,
-    color: 'bg-blue-400 hover:bg-blue-500',
-  },
-  {
-    name: 'Twitter',
-    icon: '🐦',
-    getUrl: (url: string, title: string) => url,
-    color: 'bg-slate-800 hover:bg-slate-900',
-  },
-  {
-    name: 'Copy Link',
-    icon: '🔗',
-    getUrl: (url: string) => url,
-    color: 'bg-slate-500 hover:bg-slate-600',
-    isCopy: true,
-  },
-];
-
 const LandingPage: FC = () => {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedLocation, setSelectedLocation] = useState('all');
   const [user, setUser] = useState<User | null>(null);
-  const [showShareTooltip, setShowShareTooltip] = useState<string | null>(null);
-  const shareTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showLeadMagnet, setShowLeadMagnet] = useState(false);
   const [email, setEmail] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -214,38 +178,6 @@ const LandingPage: FC = () => {
     }, 15000);
     return () => clearInterval(interval);
   }, [currentRooms.length]);
-
-  const handleShare = useCallback((platform: typeof sharePlatforms[0]) => {
-    if (!mounted) return; // Only run on client-side
-    
-    const url = window.location.href;
-    const title = 'AMR Home Solutions - Find Your Perfect Room in KL';
-    
-    trackEvent({
-      event: 'room_share',
-      params: { platform: platform.name, url },
-    });
-
-    if (platform.isCopy) {
-      navigator.clipboard.writeText(url).then(() => {
-        setShowShareTooltip(platform.name);
-        if (shareTimeoutRef.current) clearTimeout(shareTimeoutRef.current);
-        shareTimeoutRef.current = setTimeout(() => setShowShareTooltip(null), 2000);
-      });
-    } else {
-      let shareUrl = url;
-      if (platform.name === 'WhatsApp') {
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(`${title} - ${url}`)}`;
-      } else if (platform.name === 'Facebook') {
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-      } else if (platform.name === 'Telegram') {
-        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
-      } else if (platform.name === 'Twitter') {
-        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
-      }
-      window.open(shareUrl, '_blank', 'noopener,noreferrer');
-    }
-  }, [mounted]);
 
   const handleLeadMagnetSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -436,19 +368,14 @@ const LandingPage: FC = () => {
                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity">
                            <span className="bg-white text-slate-800 px-4 py-2 rounded-full font-medium text-sm">View Room</span>
                          </div>
-                         {/* Share Button on each room card */}
-                         <div className="absolute top-2 right-2 flex gap-1">
-                           <button
-                             onClick={(e) => {
-                               e.preventDefault();
-                               handleShare(sharePlatforms[0]); // WhatsApp
-                             }}
-                             className="bg-green-500 text-white p-1.5 rounded-full hover:bg-green-600 transition-colors"
-                             title="Share on WhatsApp"
-                           >
-                             <span className="text-xs">💬</span>
-                           </button>
-                         </div>
+                          {/* Share Button on each room card */}
+                          <div className="absolute top-2 right-2 flex gap-1" onClick={(e) => e.preventDefault()}>
+                            <RoomShareButtons
+                              url={`https://sublet-zeta.vercel.app/rooms/${room.id}`}
+                              title={`${room.title} - ${room.price}`}
+                              size="sm"
+                            />
+                          </div>
                        </div>
                      </a>
                    ))}
@@ -651,22 +578,12 @@ const LandingPage: FC = () => {
       <section className="py-12 bg-white border-t border-slate-100">
         <div className="container mx-auto px-4 text-center">
           <h4 className="text-xl font-bold text-slate-800 mb-6">Share with Friends & Family</h4>
-          <div className="flex justify-center gap-4 flex-wrap">
-            {sharePlatforms.map((platform) => (
-              <button
-                key={platform.name}
-                onClick={() => handleShare(platform)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-white font-medium transition-colors ${platform.color} relative`}
-              >
-                <span>{platform.icon}</span>
-                {platform.name}
-                {showShareTooltip === platform.name && (
-                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                    Copied!
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="flex justify-center">
+            <RoomShareButtons
+              url={typeof window !== 'undefined' ? window.location.href : ''}
+              title="AMR Home Solutions - Find Your Perfect Room in KL"
+              size="md"
+            />
           </div>
         </div>
       </section>

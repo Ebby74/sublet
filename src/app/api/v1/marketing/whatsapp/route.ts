@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       floors: {
         include: {
           rooms: {
-            where: { status: 'active', deletedAt: null },
+            where: { status: { in: ['available', 'rented', 'maintenance'] }, deletedAt: null },
             select: { rentSen: true },
           },
         },

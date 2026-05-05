@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       floors: {
         include: {
           rooms: {
-            where: { status: 'active', deletedAt: null },
+            where: { status: { in: ['available', 'rented', 'maintenance'] }, deletedAt: null },
           },
         },
       },

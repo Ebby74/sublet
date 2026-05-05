@@ -33,7 +33,7 @@ export async function createViewing(input: CreateViewingInput, userId: string) {
     include: { floor: { include: { property: true } } },
   });
 
-  if (!room || room.status !== 'active') {
+  if (!room || room.status !== 'available') {
     throw new Error('Room not available for viewing');
   }
 

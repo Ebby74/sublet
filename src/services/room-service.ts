@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { ringgitToSen } from '@/lib/format';
 
+export type RoomStatus = 'draft' | 'available' | 'listed' | 'rented' | 'maintenance';
+
 export interface CreateRoomInput {
   floorId: string;
   name: string;
@@ -12,7 +14,7 @@ export interface CreateRoomInput {
   depositSen?: number;
   photos?: string[];
   videos?: string[];
-  status?: 'draft' | 'active' | 'rented';
+  status?: RoomStatus;
 }
 
 export interface UpdateRoomInput {
@@ -101,18 +103,18 @@ export async function deleteRoom(id: string) {
   });
 }
 
-export async function getActiveRoomsByProperty(propertyId: string) {
+export async function getAvailableRoomsByProperty(propertyId: string) {
   return prisma.room.findMany({
     where: {
       floor: { propertyId },
-      status: 'active',
+      status: 'available',
       deletedAt: null,
     },
     orderBy: { name: 'asc' },
   });
 }
 
-export async function updateRoomStatus(id: string, status: 'draft' | 'active' | 'rented') {
+export async function updateRoomStatus(id: string, status: RoomStatus) {
   return prisma.room.update({
     where: { id },
     data: { status },
@@ -122,11 +124,38 @@ export async function updateRoomStatus(id: string, status: 'draft' | 'active' | 
 export async function getPublicRooms() {
   return prisma.room.findMany({
     where: {
-      status: 'active',
+      status: { in: ['available', 'rented', 'maintenance'] },
       deletedAt: null,
     },
     include: {
       floor: { include: { property: { select: { id: true, name: true, address: true } } } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+export async function getAllRoomsForAdmin() {
+  return prisma.room.findMany({
+    where: {
+      deletedAt: null,
+    },
+    include: {
+      floor: { include: { property: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+export async function getRoomsForJVStakeholder(propertyIds: string[]) {
+  return prisma.room.findMany({
+    where: {
+      floor: {
+        propertyId: { in: propertyIds },
+      },
+      deletedAt: null,
+    },
+    include: {
+      floor: { include: { property: true } },
     },
     orderBy: { createdAt: 'desc' },
   });

@@ -54,7 +54,7 @@ export class MarketingTriggerService {
         floors: {
           include: {
             rooms: {
-              where: { status: 'active', deletedAt: null },
+              where: { status: 'available', deletedAt: null },
             },
           },
         },
@@ -92,7 +92,7 @@ export class MarketingTriggerService {
         floors: {
           include: {
             rooms: {
-              where: { status: 'active', deletedAt: null },
+              where: { status: 'available', deletedAt: null },
             },
           },
         },
@@ -203,10 +203,10 @@ export class MarketingTriggerService {
 
   // ============ Room-specific triggers ============
 
-  // Auto-trigger: Called when room status becomes 'active'
-  async onRoomActive(roomId: string): Promise<TriggerResult> {
+  // Auto-trigger: Called when room status becomes 'available'
+  async onRoomAvailable(roomId: string): Promise<TriggerResult> {
     const room = await getRoom(roomId);
-    if (!room || room.status !== 'active') {
+    if (!room || room.status !== 'available') {
       return {
         success: false,
         channels: {},

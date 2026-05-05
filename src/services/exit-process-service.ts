@@ -107,7 +107,7 @@ export async function completeExitProcess(leaseId: string): Promise<ExitProcess>
 
   await prisma.room.update({
     where: { id: exitProcess.lease.roomId },
-    data: { status: 'active', vacantSince: new Date() },
+    data: { status: 'available', vacantSince: new Date() },
   });
 
   return prisma.exitProcess.update({

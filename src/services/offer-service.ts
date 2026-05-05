@@ -19,7 +19,7 @@ export async function createOffer(input: CreateOfferInput) {
     where: { id: input.roomId },
   });
 
-  if (!room || room.status !== 'active') {
+  if (!room || room.status !== 'available') {
     throw new Error('Room not available for offers');
   }
 

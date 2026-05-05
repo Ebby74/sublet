@@ -227,7 +227,7 @@ export async function exportByProperty(userId: string, propertyId: string) {
           rooms: {
             include: {
               leases: {
-                where: { status: 'active', deletedAt: null },
+                where: { status: { in: ['available', 'rented', 'maintenance'] }, deletedAt: null },
                 include: {
                   tenant: true,
                   payments: {
@@ -342,7 +342,7 @@ export async function exportLHDN(userId: string, filters: ExportFilters = {}) {
           property: { userId }
         }
       },
-      status: 'active',
+      status: { in: ['available', 'rented', 'maintenance'] },
       deletedAt: null,
     },
     include: {

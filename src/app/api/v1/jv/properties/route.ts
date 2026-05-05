@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     // Calculate status for each property
     const propertiesWithStatus = properties.map((property) => {
       const allRooms = property.floors.flatMap(f => f.rooms);
-      const vacantRooms = allRooms.filter((r: { status: string }) => r.status === 'draft' || r.status === 'active');
+      const vacantRooms = allRooms.filter((r: { status: string }) => r.status === 'draft' || r.status === 'available' || r.status === 'listed');
       const tenantedRooms = allRooms.filter((r: { status: string }) => r.status === 'rented');
       const totalRent = allRooms.reduce((sum: number, r: { rentSen: number }) => sum + r.rentSen, 0);
 

@@ -22,8 +22,10 @@ interface RoomCardProps {
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',
-  active: 'bg-green-100 text-green-700',
+  available: 'bg-green-100 text-green-700',
+  listed: 'bg-yellow-100 text-yellow-700',
   rented: 'bg-blue-100 text-blue-700',
+  maintenance: 'bg-orange-100 text-orange-700',
 };
 
 export function RoomCard({ room, propertyId, onStatusChange }: RoomCardProps) {
@@ -41,7 +43,7 @@ export function RoomCard({ room, propertyId, onStatusChange }: RoomCardProps) {
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-semibold">{room.name}</h3>
         <span className={`px-2 py-1 rounded text-xs font-medium ${statusColors[room.status] || statusColors.draft}`}>
-          {room.status}
+          {room.status === 'available' ? 'Available' : room.status === 'listed' ? 'Listed' : room.status === 'rented' ? 'Rented' : room.status === 'maintenance' ? 'Maintenance' : 'Draft'}
         </span>
       </div>
 
@@ -63,18 +65,18 @@ export function RoomCard({ room, propertyId, onStatusChange }: RoomCardProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onStatusChange(room.id, 'active')}
+            onClick={() => onStatusChange(room.id, 'available')}
           >
-            Activate
+            Make Available
           </Button>
         )}
-        {room.status === 'active' && onStatusChange && (
+        {room.status === 'available' && onStatusChange && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => onStatusChange(room.id, 'draft')}
           >
-            Deactivate
+            Hide
           </Button>
         )}
       </div>

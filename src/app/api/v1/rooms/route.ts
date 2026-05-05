@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRoom, getRoomsByProperty, getPublicRooms } from '@/services/room-service';
+import { createRoom, getRoomsByProperty, getPublicRooms, getAllRoomsForAdmin, getRoomsForJVStakeholder } from '@/services/room-service';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
-  const userId = request.headers.get('x-user-id');
-  
-  // Public endpoint: /api/v1/rooms?public=true
   const { searchParams } = new URL(request.url);
   const isPublic = searchParams.get('public') === 'true';
   
@@ -13,18 +11,33 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: rooms });
   }
 
-  if (!userId) {
+  const user = await getCurrentUser(request);
+  if (!user?.userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const propertyId = searchParams.get('propertyId');
 
-  if (!propertyId) {
-    return NextResponse.json({ error: 'propertyId is required' }, { status: 400 });
+  if (propertyId) {
+    const rooms = await getRoomsByProperty(propertyId);
+    return NextResponse.json({ data: rooms });
   }
 
-  const rooms = await getRoomsByProperty(propertyId);
-  return NextResponse.json({ data: rooms });
+  const allRooms = searchParams.get('all') === 'true';
+  const role = user.role;
+
+  if (allRooms && (role === 'admin' || role === 'moderator')) {
+    const rooms = await getAllRoomsForAdmin();
+    return NextResponse.json({ data: rooms });
+  }
+
+  if (role === 'jv' && user.jvProperties) {
+    const propertyIds = JSON.parse(user.jvProperties);
+    const rooms = await getRoomsForJVStakeholder(propertyIds);
+    return NextResponse.json({ data: rooms });
+  }
+
+  return NextResponse.json({ error: 'propertyId is required' }, { status: 400 });
 }
 
 export async function POST(request: NextRequest) {

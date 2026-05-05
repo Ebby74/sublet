@@ -205,7 +205,7 @@ class ImportExecutionService {
                   endDate: new Date(record.data.endDate as string),
                   monthlyRentSen: (record.data.monthlyRentSen as number) || 0,
                   depositSen: (record.data.depositSen as number) || 0,
-                  status: (record.data.status as string) || 'active',
+                  status: (record.data.status as string) || 'available',
                   roomId: leaseRoomId,
                   tenantId: tenant.id,
                   userId,

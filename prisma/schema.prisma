@@ -84,7 +84,7 @@ model Room {
   depositSen Int?
   photos     String?   // JSON array of media URLs
   videos     String?   // JSON array of video URLs
-  status     String    @default("draft") // draft, active, rented, maintenance, listed
+  status     String    @default("draft") // draft, available, listed, rented, maintenance
   description String?
   descriptionV2 String?
   descriptionHistory String?

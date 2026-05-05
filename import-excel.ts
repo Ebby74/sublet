@@ -166,7 +166,7 @@ async function main() {
         endDate: new Date(`${YEAR}-12-31`),
         monthlyRentSen: Math.round(tenantData.rent * 100),
         depositSen: Math.round(tenantData.deposit * 100),
-        status: 'active',
+        status: 'available',
         property: { connect: { id: propertyId } },
         tenant: { connect: { id: tenant.id } },
         user: { connect: { id: USER_ID } },
