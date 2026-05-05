@@ -15,23 +15,33 @@ interface User {
   role: string;
 }
 
+interface DbRoom {
+  id: string;
+  name: string;
+  rentSen: number;
+  photos?: string | null;
+  status: string;
+  floor?: { property?: { id: string; name: string; address: string } | null } | null;
+}
+
 interface Room {
+  id: string;
   img: string;
   title: string;
   price: string;
+  priceLabel: string;
   location: string;
+  locationLabel: string;
+  propertyName: string;
   nearestLrt?: string;
 }
 
-const sampleRooms: Room[] = [
-  { img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80', title: 'Master Bedroom', price: 'RM 800/mo', location: 'keramat' },
-  { img: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&q=80', title: 'Premium Room', price: 'RM 650/mo', location: 'keramat' },
-  { img: 'https://images.unsplash.com/photo-1584132967334-10e958bd3987?w=600&q=80', title: 'Cozy Room', price: 'RM 550/mo', location: 'keramat' },
-  { img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80', title: 'Deluxe Suite', price: 'RM 950/mo', location: 'keramat' },
-  { img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80', title: 'Standard Room', price: 'RM 450/mo', location: 'keramat' },
-];
+interface LocationOption {
+  id: string;
+  name: string;
+}
 
-const locations = [
+const defaultLocations: LocationOption[] = [
   { id: 'all', name: 'Select Location' },
   { id: 'keramat', name: 'Keramat, KL, LRT Damai' },
   { id: 'teratai', name: 'Teratai Mewah, Setapak, MRT?' },
@@ -43,15 +53,12 @@ const locations = [
   { id: 'lagoon', name: 'Lagoon Perdana, PJ, LRT/MRT?' },
 ];
 
-const filteredRooms: Room[] = [
-  { img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80', title: 'Master Bedroom', price: 'RM 800/mo', location: 'keramat' },
-  { img: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&q=80', title: 'Premium Room', price: 'RM 650/mo', location: 'teratai' },
-  { img: 'https://images.unsplash.com/photo-1584132967334-10e958bd3987?w=600&q=80', title: 'Cozy Room', price: 'RM 550/mo', location: 'sri-nilam' },
-  { img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80', title: 'Deluxe Suite', price: 'RM 950/mo', location: 'pandan-cahaya' },
-  { img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80', title: 'Standard Room', price: 'RM 450/mo', location: 'pandan-jaya-33' },
-  { img: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600&q=80', title: 'Eco Room', price: 'RM 700/mo', location: 'pandan-jaya-45' },
-  { img: 'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=600&q=80', title: 'Skyline Room', price: 'RM 850/mo', location: 'pandan-indah' },
-  { img: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=80', title: 'Garden Room', price: 'RM 600/mo', location: 'lagoon' },
+const sampleRooms: Room[] = [
+  { id: '1', img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80', title: 'Master Bedroom', price: 'RM 800/mo', priceLabel: 'RM 800/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
+  { id: '2', img: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&q=80', title: 'Premium Room', price: 'RM 650/mo', priceLabel: 'RM 650/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
+  { id: '3', img: 'https://images.unsplash.com/photo-1584132967334-10e958bd3987?w=600&q=80', title: 'Cozy Room', price: 'RM 550/mo', priceLabel: 'RM 550/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
+  { id: '4', img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80', title: 'Deluxe Suite', price: 'RM 950/mo', priceLabel: 'RM 950/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
+  { id: '5', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80', title: 'Standard Room', price: 'RM 450/mo', priceLabel: 'RM 450/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
 ];
 
 // Social Proof - Placeholder testimonials matching target users (young KL professionals)
@@ -124,6 +131,9 @@ const LandingPage: FC = () => {
   const [showLeadMagnet, setShowLeadMagnet] = useState(false);
   const [email, setEmail] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [dbRooms, setDbRooms] = useState<Room[]>([]);
+  const [dynamicLocations, setDynamicLocations] = useState<LocationOption[]>([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -139,11 +149,64 @@ const LandingPage: FC = () => {
       .catch(() => setUser(null));
   }, []);
 
-  const displayedRooms = selectedLocation === 'all' 
-    ? filteredRooms 
-    : filteredRooms.filter(room => room.location === selectedLocation);
+  useEffect(() => {
+    fetch('/api/v1/rooms?public=true')
+      .then(res => res.json())
+      .then((result) => {
+        const rooms: DbRoom[] = result.data || [];
+        if (rooms.length === 0) {
+          setDbRooms(sampleRooms);
+          setDynamicLocations(defaultLocations);
+          setIsLoadingRooms(false);
+          return;
+        }
 
-  const currentRooms = displayedRooms.length > 0 ? displayedRooms : filteredRooms;
+        const parsed: Room[] = rooms.map((r) => {
+          const photos: string[] = r.photos ? JSON.parse(r.photos) : [];
+          const property = r.floor?.property;
+          const locationId = property?.id || 'unknown';
+          const locationLabel = property?.name || 'Unknown';
+          const ringgit = Math.floor(r.rentSen / 100);
+          const sen = r.rentSen % 100;
+          const priceLabel = `RM ${ringgit}${sen > 0 ? `.${sen.toString().padStart(2, '0')}` : ''}/mo`;
+
+          return {
+            id: r.id,
+            img: photos.length > 0 ? photos[0] : '/amr-logo.jpg',
+            title: r.name,
+            price: priceLabel,
+            priceLabel,
+            location: locationId,
+            locationLabel,
+            propertyName: property?.name || '',
+          };
+        });
+
+        const locs: LocationOption[] = [
+          { id: 'all', name: 'Select Location' },
+          ...Array.from(
+            new Map(
+              parsed.map((r) => [r.location, { id: r.location, name: r.locationLabel }])
+            ).values()
+          ),
+        ];
+
+        setDbRooms(parsed);
+        setDynamicLocations(locs);
+        setIsLoadingRooms(false);
+      })
+      .catch(() => {
+        setDbRooms(sampleRooms);
+        setDynamicLocations(defaultLocations);
+        setIsLoadingRooms(false);
+      });
+  }, []);
+
+  const displayedRooms = selectedLocation === 'all'
+    ? dbRooms
+    : dbRooms.filter(room => room.location === selectedLocation);
+
+  const currentRooms = displayedRooms.length > 0 ? displayedRooms : dbRooms;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -323,9 +386,9 @@ const LandingPage: FC = () => {
                      }}
                      className="appearance-none bg-white/90 backdrop-blur-sm text-slate-800 font-medium px-6 py-3 pr-12 rounded-full border-2 border-white/30 shadow-lg cursor-pointer hover:border-white/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF6600] text-lg min-w-[250px]"
                    >
-                     {locations.map((loc) => (
-                       <option key={loc.id} value={loc.id}>{loc.name}</option>
-                     ))}
+                    {dynamicLocations.map((loc) => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
                    </select>
                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
                      <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -347,9 +410,9 @@ const LandingPage: FC = () => {
                  
                  <div className="relative w-full flex justify-center items-center">
                    {currentRooms.map((room, i) => (
-                     <a 
-                       key={i}
-                       href="/properties" 
+                      <a 
+                        key={room.id}
+                        href={`/rooms/${room.id}`}
                        onClick={() => trackEvent({ event: 'carousel_interaction', params: { room: room.title } })}
                        className={`absolute transition-all duration-700 ease-in-out group cursor-pointer ${
                          getPositionClass(i, activeIndex)
