@@ -10,25 +10,29 @@ const prisma = new PrismaClient();
 async function main() {
   const hashedPassword = await bcrypt.hash('12345678', 12);
   
-  const ebby = await prisma.user.create({
-    data: {
-      email: 'ebby@amr.my',
-      name: 'Ebby',
-      password: hashedPassword,
-      role: 'admin',
-    }
+  const existing = await prisma.user.findUnique({
+    where: { email: 'amrhomes4845@gmail.com' }
   });
+
+  if (existing) {
+    await prisma.user.update({
+      where: { email: 'amrhomes4845@gmail.com' },
+      data: { password: hashedPassword, role: 'admin' }
+    });
+    console.log('Updated admin:', 'amrhomes4845@gmail.com');
+  } else {
+    await prisma.user.create({
+      data: {
+        email: 'amrhomes4845@gmail.com',
+        name: 'Admin',
+        password: hashedPassword,
+        role: 'admin',
+      }
+    });
+    console.log('Created admin:', 'amrhomes4845@gmail.com');
+  }
   
-  const annah = await prisma.user.create({
-    data: {
-      email: 'annah@amr.my',
-      name: 'Annah',
-      password: hashedPassword,
-      role: 'admin',
-    }
-  });
-  
-  console.log('Created admins:', ebby.email, annah.email);
+  console.log('Login: amrhomes4845@gmail.com / 12345678');
   await prisma.$disconnect();
 }
 
