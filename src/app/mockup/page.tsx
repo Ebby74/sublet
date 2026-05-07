@@ -288,7 +288,7 @@ export default function MockupPage() {
 
                   {/* CTA */}
                   <Link
-                    href={`/rooms/${room.id}`}
+                    href={`/mockup/rooms/${room.id}`}
                     className="w-full block text-center bg-[#FF6600] hover:bg-[#e55a00] text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
                   >
                     View Details & Inquire
