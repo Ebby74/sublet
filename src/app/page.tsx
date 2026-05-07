@@ -3,11 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import type { FC } from 'react';
-import { trackEvent, trackWhatsAppClick } from '@/lib/analytics';
+import { trackEvent } from '@/lib/analytics';
 import { ShareButton } from '@/components/ui/share-button';
+
+const SSM_NUMBER = 'SSM: 2026XXXXXXX';
+const WHATSAPP_NUMBER = '60123456789';
 
 interface User {
   id: string;
@@ -19,84 +22,81 @@ interface User {
 interface DbRoom {
   id: string;
   name: string;
+  type: string;
+  beds: number;
   rentSen: number;
+  depositSen?: number | null;
   photos?: string | null;
+  caption?: string | null;
+  descriptionV2?: string | null;
   status: string;
   floor?: { property?: { id: string; name: string; address: string } | null } | null;
 }
 
-interface Room {
+interface RoomCard {
   id: string;
   img: string;
   title: string;
   price: string;
-  priceLabel: string;
+  deposit: string;
+  moveInCost: string;
   location: string;
-  locationLabel: string;
-  propertyName: string;
-  nearestLrt?: string;
+  tag: 'Muslimin' | 'Muslimah' | 'Mixed';
+  tagColor: string;
+  beds: string;
+  gender: string;
+  moveIn: string;
+  available: number;
 }
 
-interface LocationOption {
-  id: string;
-  name: string;
+function formatPrice(sen: number): string {
+  const ringgit = Math.floor(sen / 100);
+  return `RM ${ringgit.toLocaleString()}`;
 }
 
-const defaultLocations: LocationOption[] = [
-  { id: 'all', name: 'Select Location' },
-  { id: 'keramat', name: 'Keramat, KL, LRT Damai' },
-  { id: 'teratai', name: 'Teratai Mewah, Setapak, MRT?' },
-  { id: 'sri-nilam', name: 'Sri Nilam, Bdr Baru Ampang, LRT/MRT?' },
-  { id: 'pandan-cahaya', name: 'Pandan Cahaya, KL, LRT Cahaya' },
-  { id: 'pandan-jaya-33', name: 'Pandan Jaya 33, KL, LRT Pandan Jaya' },
-  { id: 'pandan-jaya-45', name: 'Pandan Jaya 45, KL, LRT Pandan Jaya' },
-  { id: 'pandan-indah', name: 'Pandan Indah, KL, LRT?' },
-  { id: 'lagoon', name: 'Lagoon Perdana, PJ, LRT/MRT?' },
+function detectGender(room: DbRoom): 'Muslimin' | 'Muslimah' | 'Mixed' {
+  const text = `${room.caption || ''} ${room.descriptionV2 || ''} ${room.name || ''}`.toLowerCase();
+  if (text.includes('muslimin') || text.includes('male') || text.includes('lelaki')) return 'Muslimin';
+  if (text.includes('muslimah') || text.includes('female') || text.includes('perempuan')) return 'Muslimah';
+  return 'Mixed';
+}
+
+function getMoveInDate(room: DbRoom): string {
+  if (room.status === 'available') return 'Immediate';
+  if (room.vacantSince) {
+    const d = new Date(room.vacantSince);
+    return d.toLocaleDateString('en-MY', { day: 'numeric', month: 'short' });
+  }
+  return 'Contact for date';
+}
+
+const steps = [
+  {
+    num: '1',
+    title: 'Choose Your Room',
+    desc: 'Browse our fully furnished rooms near LRT/MRT. Pick a single or shared room that fits your budget and location preference.',
+    icon: '🏠',
+  },
+  {
+    num: '2',
+    title: 'Inquire & View',
+    desc: 'Chat with AIrene — our AI assistant qualifies your inquiry in 2 minutes. If eligible, she schedules your viewing session.',
+    icon: '💬',
+  },
+  {
+    num: '3',
+    title: 'Move In',
+    desc: 'Accept the offer, sign digitally, pay deposit (2 months rent + utilities). Keys handed over on move-in day. Simple.',
+    icon: '🔑',
+  },
 ];
-
-const sampleRooms: Room[] = [
-  { id: '1', img: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80', title: 'Master Bedroom', price: 'RM 800/mo', priceLabel: 'RM 800/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
-  { id: '2', img: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&q=80', title: 'Premium Room', price: 'RM 650/mo', priceLabel: 'RM 650/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
-  { id: '3', img: 'https://images.unsplash.com/photo-1584132967334-10e958bd3987?w=600&q=80', title: 'Cozy Room', price: 'RM 550/mo', priceLabel: 'RM 550/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
-  { id: '4', img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80', title: 'Deluxe Suite', price: 'RM 950/mo', priceLabel: 'RM 950/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
-  { id: '5', img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80', title: 'Standard Room', price: 'RM 450/mo', priceLabel: 'RM 450/mo', location: 'keramat', locationLabel: 'Keramat', propertyName: 'Keramat' },
-];
-
-// Social Proof - Placeholder testimonials matching target users (young KL professionals)
-const testimonials = [
-  { name: 'Sarah Chen', role: 'Graphic Designer', location: 'Pandan Jaya', text: 'Moved in within 48hrs! AIrene handled everything — from viewing to contract. So easy!', emoji: '💼' },
-  { name: 'Ahmad Zul', role: 'Software Engineer', location: 'Keramat', text: 'Best decision ever. Room is near LRT, fully furnished. AIrene replied in 2 minutes!', emoji: '💻' },
-  { name: 'Priya Sharma', role: 'Accountant', location: 'Setapak', text: 'Transparent fees, no hidden charges. Finally a rental platform I can trust.', emoji: '📊' },
-];
-
-// Trust Badges for Malaysian renters
-const trustBadges = [
-  { text: 'SSM Registered', icon: '🏢' },
-  { text: '24/7 AI Support', icon: '🤖' },
-  { text: 'Transparent Fees', icon: '💰' },
-  { text: 'Same-Day Response', icon: '⚡' },
-];
-
-// Scarcity banner
-const scarcityMessage = "Only 3 rooms left in Keramat this month — inquire now!";
-
-// Lead Magnet
-const leadMagnet = {
-  title: '2026 KL Room Rental Guide',
-  description: 'Free guide with LRT map, average rents & tenant rights',
-  icon: '📖',
-};
 
 const LandingPage: FC = () => {
   const router = useRouter();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [filter, setFilter] = useState<'all' | 'muslimin' | 'muslimah'>('all');
   const [user, setUser] = useState<User | null>(null);
-  const [showLeadMagnet, setShowLeadMagnet] = useState(false);
-  const [email, setEmail] = useState('');
   const [mounted, setMounted] = useState(false);
-  const [dbRooms, setDbRooms] = useState<Room[]>([]);
-  const [dynamicLocations, setDynamicLocations] = useState<LocationOption[]>([]);
+  const [dbRooms, setDbRooms] = useState<RoomCard[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
 
   useEffect(() => {
@@ -118,105 +118,69 @@ const LandingPage: FC = () => {
       .then(res => res.json())
       .then((result) => {
         const rooms: DbRoom[] = result.data || [];
-        if (rooms.length === 0) {
-          setDbRooms(sampleRooms);
-          setDynamicLocations(defaultLocations);
-          setIsLoadingRooms(false);
-          return;
-        }
+        const availableRooms = rooms.filter(r => r.status === 'available' || r.status === 'listed');
 
-        const parsed: Room[] = rooms.map((r) => {
+        const parsed: RoomCard[] = availableRooms.map((r) => {
           const photos: string[] = r.photos ? JSON.parse(r.photos) : [];
           const property = r.floor?.property;
-          const locationId = property?.id || 'unknown';
-          const locationLabel = property?.name || 'Unknown';
+          const gender = detectGender(r);
           const ringgit = Math.floor(r.rentSen / 100);
           const sen = r.rentSen % 100;
-          const priceLabel = `RM ${ringgit}${sen > 0 ? `.${sen.toString().padStart(2, '0')}` : ''}/mo`;
+          const price = `RM ${ringgit}${sen > 0 ? `.${sen.toString().padStart(2, '0')}` : ''}`;
+          const depositSen = r.depositSen ?? r.rentSen * 2;
+          const depositRinggit = Math.floor(depositSen / 100);
+          const depositSenRemain = depositSen % 100;
+          const deposit = `RM ${depositRinggit}${depositSenRemain > 0 ? `.${depositSenRemain.toString().padStart(2, '0')}` : ''}`;
+          const totalMoveIn = ringgit + depositRinggit;
+          const moveInCost = `RM ${totalMoveIn.toLocaleString()}`;
+          const bedLabel = r.type === 'shared' ? 'Shared Room' : r.type === 'master' ? 'Master Room' : 'Single Room';
 
           return {
             id: r.id,
             img: photos.length > 0 ? photos[0] : '/amr-logo.jpg',
-            title: r.name,
-            price: priceLabel,
-            priceLabel,
-            location: locationId,
-            locationLabel,
-            propertyName: property?.name || '',
+            title: `${property?.name || 'AMR Home'} — ${r.name}`,
+            price,
+            deposit,
+            moveInCost,
+            location: property?.address || property?.name || 'KL',
+            tag: gender,
+            tagColor: gender === 'Muslimin' ? 'bg-blue-100 text-blue-800' : gender === 'Muslimah' ? 'bg-pink-100 text-pink-800' : 'bg-slate-100 text-slate-700',
+            beds: bedLabel,
+            gender: gender === 'Muslimin' ? 'Male Only' : gender === 'Muslimah' ? 'Female Only' : 'Mixed',
+            moveIn: getMoveInDate(r),
+            available: r.type === 'shared' ? 2 : 1,
           };
         });
 
-        const locs: LocationOption[] = [
-          { id: 'all', name: 'Select Location' },
-          ...Array.from(
-            new Map(
-              parsed.map((r) => [r.location, { id: r.location, name: r.locationLabel }])
-            ).values()
-          ),
-        ];
-
         setDbRooms(parsed);
-        setDynamicLocations(locs);
         setIsLoadingRooms(false);
       })
       .catch(() => {
-        setDbRooms(sampleRooms);
-        setDynamicLocations(defaultLocations);
         setIsLoadingRooms(false);
       });
   }, []);
 
-  const displayedRooms = selectedLocation === 'all'
+  const filteredRooms = filter === 'all'
     ? dbRooms
-    : dbRooms.filter(room => room.location === selectedLocation);
-
-  const currentRooms = displayedRooms.length > 0 ? displayedRooms : dbRooms;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % currentRooms.length);
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [currentRooms.length]);
-
-  const handleLeadMagnetSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    trackEvent({
-      event: 'lead_magnet_download',
-      params: { email },
-    });
-
-    // In production: send email with guide
-    alert('Check your email for the 2026 KL Room Rental Guide!');
-    setShowLeadMagnet(false);
-    setEmail('');
-  };
+    : dbRooms.filter(r => r.tag.toLowerCase() === filter);
 
   const handleChatWithAIrene = () => {
-    trackEvent({
-      event: 'chat_launched',
-      params: { source: 'landing_page' },
-    });
+    trackEvent({ event: 'chat_launched', params: { source: 'landing_page' } });
     router.push('/inquiry');
   };
 
-  const getPositionClass = (index: number, active: number): string => {
-    const totalRooms = currentRooms.length;
-    const positions = Array.from({ length: totalRooms }, (_, i) => i);
-    const rotated = positions.map(p => (p - active + totalRooms) % totalRooms);
-    const pos = rotated.indexOf(index);
-    
-    if (pos === 0) return 'z-30 scale-110 border-4 border-white ring-4 ring-white/30';
-    if (pos === 1) return 'z-20 scale-90 border-4 border-white/60 -translate-x-24 opacity-80';
-    if (pos === 2) return 'z-20 scale-90 border-4 border-white/60 translate-x-24 opacity-80';
-    if (pos === 3) return 'z-10 scale-65 border-4 border-white/30 -translate-x-48 opacity-40';
-    return 'z-10 scale-65 border-4 border-white/30 translate-x-48 opacity-40';
+  const handleWhatsApp = () => {
+    trackEvent({ event: 'whatsapp_click', params: { source: 'landing_page' } });
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hi, I\'m interested in a room at AMR Home Solutions')}`, '_blank');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-white">
+      {/* Top bar */}
+      <div className="bg-[#FF6600] text-white text-center py-2 text-sm font-medium">
+        AMR Home Solutions — Muslim-Only Co-Living in KL · {SSM_NUMBER}
+      </div>
+
       {/* Sticky Mobile CTA Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-lg p-3">
         <button
@@ -230,377 +194,329 @@ const LandingPage: FC = () => {
         </button>
       </div>
 
-       {/* Header */}
-       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
-         <div className="container mx-auto px-4 py-3">
-           <div className="flex justify-between items-start">
-             {/* Language - top left with flags */}
-             <div className="flex items-center gap-3">
-               <Link href="/?lang=en" className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-[#FF6600] font-medium transition-colors">
-                 <span className="text-base">🇬🇧</span> EN
-               </Link>
-               <span className="text-slate-300">|</span>
-               <Link href="/?lang=ms" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#FF6600] font-medium transition-colors">
-                 BM <span className="text-base">🇲🇾</span>
-               </Link>
-             </div>
-             {/* Centered Logo + Text */}
-             <div className="flex items-center mx-auto">
-               <img 
-                 src="/amr-logo.jpg" 
-                 alt="AMR Home Solutions" 
-                 className="w-20 h-20 object-contain"
-               />
-               <div className="flex flex-col">
-                 <h1 className="text-3xl font-bold text-[#FF6600]">AMR Home Solutions</h1>
-                 <p className="text-lg text-slate-600 font-medium">Your One Stop Real Estate Centre</p>
-               </div>
-             </div>
-             {/* Log In / Log Out - top right */}
-             <div className="flex items-center gap-4">
-               {mounted && user ? (
-                 <>
-                   <span className="text-sm text-slate-500">{user.name || user.email}</span>
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-100">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Left: Language */}
+            <div className="flex items-center gap-3">
+              <Link href="/?lang=en" className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-[#FF6600] font-medium transition-colors">
+                <span className="text-base">🇬🇧</span> EN
+              </Link>
+              <span className="text-slate-300">|</span>
+              <Link href="/?lang=ms" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#FF6600] font-medium transition-colors">
+                BM <span className="text-base">🇲🇾</span>
+              </Link>
+            </div>
+
+            {/* Center: Logo */}
+            <Link href="/" className="flex items-center gap-3">
+              <img src="/amr-logo.jpg" alt="AMR" className="w-10 h-10 object-contain rounded" />
+              <div className="hidden sm:block">
+                <h1 className="text-lg font-bold text-[#FF6600] leading-tight">AMR Home Solutions</h1>
+                <p className="text-xs text-slate-500 leading-tight">Your One Stop Real Estate Centre</p>
+              </div>
+            </Link>
+
+            {/* Right: Nav */}
+            <nav className="flex items-center gap-4">
+              <Link href="/#how" className="hidden md:block text-sm font-medium text-slate-700 hover:text-[#FF6600] transition-colors">How It Works</Link>
+              {mounted && user ? (
+                <>
+                  <span className="hidden sm:block text-sm text-slate-500">{user.name || user.email}</span>
                   <button onClick={async () => {
-                      await signOut({ redirect: false });
-                      setUser(null);
-                      router.push('/');
-                      router.refresh();
-                    }} className="flex items-center gap-2 text-slate-600 hover:text-[#FF6600] px-4 py-2 text-base font-medium transition-colors">
-                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                     </svg>
-                     Log Out
-                   </button>
-                 </>
-               ) : (
-                 <Link href="/auth/login" className="flex items-center gap-2 text-slate-600 hover:text-[#FF6600] px-4 py-2 text-base font-medium transition-colors">
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                   </svg>
-                   Log In
-                 </Link>
-               )}
-             </div>
-           </div>
-         </div>
-       </header>
-
-       {/* Hero */}
-       <section className="pt-28 pb-16 px-4 relative min-h-[600px]">
-          <div className="absolute inset-0 z-0">
-            <img 
-              src="/background.jpg" 
-              alt="Hero background" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-         <div className="container mx-auto max-w-6xl relative z-10">
-               {/* Center: Headline + Carousel (Spotlight) */}
-             <div className="max-w-4xl mx-auto text-center">
-               <h2 className="text-5xl md:text-6xl font-bold text-white mb-4">
-                 <span className="text-[#FF6600]" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 0 rgba(0,0,0,0.8), 1px -1px 0 rgba(0,0,0,0.8), -1px 1px 0 rgba(0,0,0,0.8)' }}>Room</span> For <span className="text-[#FF6600]" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 0 rgba(0,0,0,0.8), 1px -1px 0 rgba(0,0,0,0.8), -1px 1px 0 rgba(0,0,0,0.8)' }}>Rent</span>
-               </h2>
-               <p className="text-center text-white/80 mb-6 text-lg">Find your perfect room in Malaysia — fully furnished, move-in ready</p>
-               
-               {/* Location Dropdown */}
-               <div className="flex justify-center mb-8">
-                 <div className="relative">
-                   <select
-                     value={selectedLocation}
-                     onChange={(e) => {
-                       setSelectedLocation(e.target.value);
-                       setActiveIndex(0);
-                       trackEvent({
-                         event: 'cta_click',
-                         params: { location: e.target.value, type: 'location_filter' },
-                       });
-                     }}
-                     className="appearance-none bg-white/90 backdrop-blur-sm text-slate-800 font-medium px-6 py-3 pr-12 rounded-full border-2 border-white/30 shadow-lg cursor-pointer hover:border-white/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF6600] text-lg min-w-[250px]"
-                   >
-                    {dynamicLocations.map((loc) => (
-                        <option key={loc.id} value={loc.id}>{loc.name}</option>
-                      ))}
-                   </select>
-                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                     <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                     </svg>
-                   </div>
-                 </div>
-               </div>
-               
-               {/* Bedroom Carousel - Circular (Spotlight) */}
-               <div className="relative h-80 flex justify-center items-center mt-8">
-                 {/* Carousel Progress Bar */}
-                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-white/30 rounded-full overflow-hidden">
-                   <div 
-                     className="h-full bg-[#FF6600] transition-all duration-[15000ms] ease-linear"
-                     style={{ width: `${((activeIndex + 1) / currentRooms.length) * 100}%` }}
-                   />
-                 </div>
-                 
-                 <div className="relative w-full flex justify-center items-center">
-                   {currentRooms.map((room, i) => (
-                      <a 
-                        key={room.id}
-                        href={`/rooms/${room.id}`}
-                       onClick={() => trackEvent({ event: 'carousel_interaction', params: { room: room.title } })}
-                       className={`absolute transition-all duration-700 ease-in-out group cursor-pointer ${
-                         getPositionClass(i, activeIndex)
-                       }`}
-                       style={{
-                         width: '200px',
-                         height: '240px',
-                       }}
-                     >
-                       <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-                         <img 
-                           src={room.img} 
-                           alt={room.title}
-                           className="w-full h-full object-cover"
-                         />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                         <div className="absolute bottom-3 left-0 right-0 text-center" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                           <p className="text-white font-bold text-sm">{room.title}</p>
-                           <p className="text-[#FF6600] font-bold">{room.price}</p>
-                         </div>
-                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity">
-                           <span className="bg-white text-slate-800 px-4 py-2 rounded-full font-medium text-sm">View Room</span>
-                         </div>
-                           {/* Share Button on each room card */}
-                           <div className="absolute top-2 right-2" onClick={(e) => e.preventDefault()}>
-                             <ShareButton
-                               url={`https://sublet-zeta.vercel.app/rooms/${room.id}`}
-                               title={`${room.title} - ${room.price}`}
-                             />
-                           </div>
-                       </div>
-                     </a>
-                   ))}
-                 </div>
-               </div>
-             </div>
-         </div>
-       </section>
-       
-        {/* Primary CTA - Below Hero */}
-        <div className="text-center mt-16 pb-16">
-          <div className="container mx-auto px-4">
-            <button
-              onClick={handleChatWithAIrene}
-              className="inline-flex items-center gap-2 bg-[#FF6600] hover:bg-[#e55a00] text-white font-semibold px-8 py-4 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-xl text-lg"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              Chat with AIrene
-            </button>
-            <p className="text-slate-600 text-sm mt-2">{'AIrene replies in '}<span>{'<2'}</span>{' minutes • 24/7 available'}</p>
+                    await signOut({ redirect: false });
+                    setUser(null);
+                    router.push('/');
+                    router.refresh();
+                  }} className="text-sm text-slate-600 hover:text-[#FF6600] font-medium transition-colors">
+                    Log Out
+                  </button>
+                </>
+              ) : (
+                <Link href="/auth/login" className="text-sm text-slate-600 hover:text-[#FF6600] font-medium transition-colors">
+                  Log In
+                </Link>
+              )}
+              <button
+                onClick={handleChatWithAIrene}
+                className="bg-[#FF6600] text-white px-5 py-2 rounded-full hover:bg-[#e55a00] transition-colors text-sm font-medium"
+              >
+                Chat with AIrene
+              </button>
+            </nav>
           </div>
         </div>
+      </header>
 
-      {/* Trust Badges */}
-      <section className="py-6 bg-white border-b border-slate-100">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
-            {trustBadges.map((badge, i) => (
-              <div key={i} className="flex items-center gap-2 text-slate-700">
-                <span className="text-2xl">{badge.icon}</span>
-                <span className="font-medium text-sm">{badge.text}</span>
-              </div>
-            ))}
-          </div>
+      {/* Hero */}
+      <section className="relative bg-gradient-to-b from-[#1a1a2e] to-[#16213e] py-16 px-4">
+        <div className="absolute inset-0 opacity-10">
+          <img
+            src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1400&q=80"
+            alt=""
+            className="w-full h-full object-cover"
+          />
         </div>
-      </section>
+        <div className="container mx-auto max-w-4xl text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Find Your <span className="text-[#FF6600]">Room</span> in KL
+          </h2>
+          <p className="text-white/70 text-lg mb-4">
+            Muslim-only co-living · Fully furnished · Near LRT/MRT
+          </p>
+          <p className="text-white/50 text-sm mb-8">
+            Gender-segregated housing for Muslimin & Muslimah · Starting from RM 500/month
+          </p>
 
-      {/* Social Proof - Testimonials */}
-      <section className="py-16 bg-slate-50">
-        <div className="container mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center mb-4">Loved by Young Professionals</h3>
-          <p className="text-center text-slate-500 mb-12 max-w-lg mx-auto">See what others say about their experience with AIrene</p>
-          
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {testimonials.map((testimonial, i) => (
-              <div key={i} className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-                <div className="text-3xl mb-3">{testimonial.emoji}</div>
-                <p className="text-slate-600 mb-4 italic">&ldquo;{testimonial.text}&rdquo;</p>
-                <div className="border-t pt-3">
-                  <p className="font-bold text-slate-800">{testimonial.name}</p>
-                  <p className="text-sm text-slate-500">{testimonial.role} • {testimonial.location}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Features */}
-      <section id="features" className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <h3 className="text-3xl font-bold text-center mb-4">Everything You Need</h3>
-          <p className="text-center text-slate-500 mb-16 max-w-lg mx-auto">From listing your first property to generating tax reports — all in one place.</p>
-           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Property Management */}
-            <Link href="/properties" className="group relative p-8 rounded-2xl border-2 border-slate-100 hover:border-[#4A7C3C]/30 bg-white hover:bg-[#4A7C3C]/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl block">
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#4A7C3C]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg className="w-5 h-5 text-[#4A7C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#4A7C3C] to-[#3d6631] flex items-center justify-center mb-5 shadow-lg shadow-[#4A7C3C]/20">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-              </div>
-              <h4 className="text-xl font-bold text-slate-800 mb-2">Property Management</h4>
-              <p className="text-slate-500">Track all your properties, units, and occupancy status in one place.</p>
-            </Link>
-
-            {/* Tenant Management */}
-            <Link href="/tenants" className="group relative p-8 rounded-2xl border-2 border-slate-100 hover:border-[#D4753A]/30 bg-white hover:bg-[#D4753A]/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl block">
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#D4753A]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg className="w-5 h-5 text-[#D4753A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#D4753A] to-[#c06530] flex items-center justify-center mb-5 shadow-lg shadow-[#D4753A]/20">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-              </div>
-              <h4 className="text-xl font-bold text-slate-800 mb-2">Tenant Management</h4>
-              <p className="text-slate-500">Store tenant details, IC numbers, and documents securely.</p>
-            </Link>
-
-            {/* Financial Tracking */}
-            <Link href="/payments" className="group relative p-8 rounded-2xl border-2 border-slate-100 hover:border-[#4A7C3C]/30 bg-white hover:bg-[#4A7C3C]/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl block">
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#4A7C3C]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg className="w-5 h-5 text-[#4A7C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#4A7C3C] to-[#3d6631] flex items-center justify-center mb-5 shadow-lg shadow-[#4A7C3C]/20">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              </div>
-              <h4 className="text-xl font-bold text-slate-800 mb-2">Financial Tracking</h4>
-              <p className="text-slate-500">Record payments, generate receipts, and track income/expenses.</p>
-            </Link>
-
-            {/* Reports & Tax */}
-            <Link href="/reports" className="group relative p-8 rounded-2xl border-2 border-slate-100 hover:border-[#D4753A]/30 bg-white hover:bg-[#D4753A]/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl block">
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#D4753A]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg className="w-5 h-5 text-[#D4753A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#D4753A] to-[#c06530] flex items-center justify-center mb-5 shadow-lg shadow-[#D4753A]/20">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-              </div>
-              <h4 className="text-xl font-bold text-slate-800 mb-2">Reports & Tax</h4>
-              <p className="text-slate-500">P&L statements, Zakat calculations, and LHDN-compliant exports.</p>
-            </Link>
-
-            {/* Marketing */}
-            <Link href="/prospects" className="group relative p-8 rounded-2xl border-2 border-slate-100 hover:border-[#4A7C3C]/30 bg-white hover:bg-[#4A7C3C]/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl block">
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#4A7C3C]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg className="w-5 h-5 text-[#4A7C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#4A7C3C] to-[#3d6631] flex items-center justify-center mb-5 shadow-lg shadow-[#4A7C3C]/20">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-              </div>
-              <h4 className="text-xl font-bold text-slate-800 mb-2">Marketing</h4>
-              <p className="text-slate-500">Auto-post vacant units to social media and generate leads.</p>
-            </Link>
-
-            {/* Reminders */}
-            <Link href="/notifications" className="group relative p-8 rounded-2xl border-2 border-slate-100 hover:border-[#D4753A]/30 bg-white hover:bg-[#D4753A]/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl block">
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#D4753A]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg className="w-5 h-5 text-[#D4753A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#D4753A] to-[#c06530] flex items-center justify-center mb-5 shadow-lg shadow-[#D4753A]/20">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-              </div>
-              <h4 className="text-xl font-bold text-slate-800 mb-2">Reminders</h4>
-              <p className="text-slate-500">Automated notifications for rent due and lease expiry.</p>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Lead Magnet Section */}
-      <section className="py-16 bg-gradient-to-r from-[#4A7C3C]/10 to-[#D4753A]/10">
-        <div className="container mx-auto px-4 text-center">
-          <div className="text-5xl mb-4">{leadMagnet.icon}</div>
-          <h3 className="text-3xl font-bold text-slate-800 mb-4">{leadMagnet.title}</h3>
-          <p className="text-slate-600 mb-8 max-w-lg mx-auto">{leadMagnet.description}</p>
-          
-          {!showLeadMagnet ? (
+          {/* Filter pills */}
+          <div className="flex justify-center gap-3 flex-wrap mb-8">
             <button
               onClick={() => {
-                setShowLeadMagnet(true);
-                trackEvent({ event: 'cta_click', params: { type: 'lead_magnet_open' } });
+                setFilter('all');
+                trackEvent({ event: 'filter_click', params: { filter: 'all' } });
               }}
-              className="inline-flex items-center gap-2 bg-[#FF6600] hover:bg-[#e55a00] text-white font-semibold px-6 py-3 rounded-full transition-colors"
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                filter === 'all'
+                  ? 'bg-[#FF6600] text-white'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20'
+              }`}
             >
-              Get Free Guide
+              All Rooms ({dbRooms.length})
             </button>
-          ) : (
-            <form onSubmit={handleLeadMagnetSubmit} className="max-w-md mx-auto flex gap-2">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-                className="flex-1 px-4 py-3 rounded-full border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
-              />
+            <button
+              onClick={() => {
+                setFilter('muslimin');
+                trackEvent({ event: 'filter_click', params: { filter: 'muslimin' } });
+              }}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                filter === 'muslimin'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20'
+              }`}
+            >
+              Muslimin ({dbRooms.filter(r => r.tag === 'Muslimin').length})
+            </button>
+            <button
+              onClick={() => {
+                setFilter('muslimah');
+                trackEvent({ event: 'filter_click', params: { filter: 'muslimah' } });
+              }}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                filter === 'muslimah'
+                  ? 'bg-pink-600 text-white'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20'
+              }`}
+            >
+              Muslimah ({dbRooms.filter(r => r.tag === 'Muslimah').length})
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Room Listings Grid */}
+      <section id="listings" className="py-12 px-4 bg-slate-50">
+        <div className="container mx-auto max-w-6xl">
+          {isLoadingRooms ? (
+            <div className="text-center py-16 text-slate-500">
+              <p>Loading rooms...</p>
+            </div>
+          ) : filteredRooms.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-3xl mb-4">🏠</p>
+              <p className="text-slate-600 text-lg mb-2">No rooms available right now</p>
+              <p className="text-slate-400 text-sm mb-6">Check back soon or chat with AIrene for updates</p>
               <button
-                type="submit"
-                className="bg-[#4A7C3C] hover:bg-[#3d6631] text-white font-semibold px-6 py-3 rounded-full transition-colors"
+                onClick={handleChatWithAIrene}
+                className="inline-flex items-center gap-2 bg-[#FF6600] hover:bg-[#e55a00] text-white font-semibold px-6 py-3 rounded-full transition-colors"
               >
-                Download
+                Chat with AIrene
               </button>
-            </form>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredRooms.map((room) => (
+                <div
+                  key={room.id}
+                  className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-slate-100"
+                >
+                  {/* Image */}
+                  <div
+                    className="relative h-52 overflow-hidden cursor-pointer"
+                    onClick={() => router.push(`/rooms/${room.id}`)}
+                  >
+                    <img
+                      src={room.img}
+                      alt={room.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${room.tagColor}`}>
+                        {room.tag}
+                      </span>
+                      {room.available === 1 && (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 animate-pulse">
+                          1 Left!
+                        </span>
+                      )}
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                      <p className="text-2xl font-bold text-white">{room.price}<span className="text-sm font-normal text-white/70">/mo</span></p>
+                    </div>
+                    <div className="absolute top-3 right-3" onClick={(e) => e.preventDefault()}>
+                      <ShareButton
+                        url={`https://sublet-zeta.vercel.app/rooms/${room.id}`}
+                        title={`${room.title} - ${room.price}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5">
+                    <h3 className="font-bold text-slate-800 text-base mb-2 line-clamp-1">{room.title}</h3>
+                    <div className="flex items-center gap-1.5 text-slate-500 text-sm mb-3">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {room.location}
+                    </div>
+
+                    {/* Details row */}
+                    <div className="flex items-center gap-4 text-sm text-slate-600 mb-4 pb-4 border-b border-slate-100">
+                      <span className="flex items-center gap-1">
+                        🛏 {room.beds}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {room.gender === 'Male Only' ? '♂' : room.gender === 'Female Only' ? '♀' : '⚥'} {room.gender}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        📅 {room.moveIn}
+                      </span>
+                    </div>
+
+                    {/* Price breakdown */}
+                    <div className="bg-slate-50 rounded-xl p-3 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Monthly Rent</span>
+                        <span className="font-semibold text-slate-800">{room.price}</span>
+                      </div>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-slate-500">Deposit (2 months)</span>
+                        <span className="font-semibold text-slate-800">{room.deposit}</span>
+                      </div>
+                      <div className="flex justify-between text-sm mt-1 pt-1 border-t border-slate-200">
+                        <span className="font-semibold text-slate-700">Move-in Cost</span>
+                        <span className="font-bold text-[#FF6600]">{room.moveInCost}</span>
+                      </div>
+                    </div>
+
+                    {/* CTA */}
+                    <Link
+                      href={`/rooms/${room.id}`}
+                      className="w-full block text-center bg-[#FF6600] hover:bg-[#e55a00] text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                    >
+                      View Details & Inquire
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </section>
 
-      {/* CTA - Middle */}
-      <section className="py-20 bg-gradient-to-r from-[#4A7C3C] to-[#3d6631]">
-        <div className="container mx-auto px-4 text-center">
-          <h3 className="text-3xl font-bold text-white mb-4">Find Your Perfect Room Today</h3>
-          <p className="text-white/80 mb-6 max-w-lg mx-auto">Chat with AIrene — from inquiry to move-in, fully automated.</p>
-          <p className="text-white/60 mb-6 text-sm">AIrene responds in &lt;2 minutes, 24/7!</p>
-          <button
-            onClick={handleChatWithAIrene}
-            className="inline-flex items-center gap-2 bg-white text-[#4A7C3C] px-8 py-4 rounded-full font-semibold hover:bg-white/90 transition-all duration-300 hover:scale-105 text-lg"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            Chat with AIrene
-          </button>
+      {/* How It Works */}
+      <section id="how" className="py-16 px-4 bg-white">
+        <div className="container mx-auto max-w-4xl text-center">
+          <h3 className="text-3xl font-bold text-slate-800 mb-3">Rent a Room in 3 Easy Steps</h3>
+          <p className="text-slate-500 mb-12 max-w-lg mx-auto">
+            No agents, no hassle. AIrene handles everything from inquiry to move-in.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {steps.map((step) => (
+              <div key={step.num} className="relative">
+                {step.num !== '3' && (
+                  <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-px bg-slate-200" />
+                )}
+                <div className="w-20 h-20 rounded-full bg-[#FF6600]/10 flex items-center justify-center mx-auto mb-5">
+                  <span className="text-4xl">{step.icon}</span>
+                </div>
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#FF6600] text-white text-sm font-bold flex items-center justify-center">
+                  {step.num}
+                </div>
+                <h4 className="font-bold text-lg text-slate-800 mb-2">{step.title}</h4>
+                <p className="text-slate-500 text-sm leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Social Sharing Section */}
-      <section className="py-12 bg-white border-t border-slate-100">
-        <div className="container mx-auto px-4 text-center">
-          <h4 className="text-xl font-bold text-slate-800 mb-2">Know someone looking for a room?</h4>
-          <p className="text-slate-500 mb-6">Share this listing with friends and family</p>
-          <div className="flex justify-center">
-            <ShareButton
-              url={typeof window !== 'undefined' ? window.location.href : ''}
-              title="AMR Home Solutions - Find Your Perfect Room in KL"
-            />
+      {/* Eligibility Notice */}
+      <section className="py-12 px-4 bg-slate-50">
+        <div className="container mx-auto max-w-2xl text-center">
+          <h3 className="text-xl font-bold text-slate-800 mb-4">Eligibility Requirements</h3>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 text-left">
+            <ul className="space-y-3 text-sm text-slate-700">
+              <li className="flex items-start gap-3">
+                <span className="text-[#FF6600] font-bold text-lg leading-none">✓</span>
+                Malaysian citizens only
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-[#FF6600] font-bold text-lg leading-none">✓</span>
+                Muslim only (gender-segregated housing)
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-[#FF6600] font-bold text-lg leading-none">✓</span>
+                Single, married-staying-alone, or divorced with no children
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-[#FF6600] font-bold text-lg leading-none">✓</span>
+                No children living with tenant
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-[#FF6600] font-bold text-lg leading-none">✓</span>
+                Minimum 6-month stay, 1-year contract
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 px-4 bg-[#FF6600]">
+        <div className="container mx-auto max-w-3xl text-center">
+          <h3 className="text-3xl font-bold text-white mb-4">Ready to Move In?</h3>
+          <p className="text-white/80 mb-8 text-lg">
+            Chat with AIrene now — she replies in under 2 minutes, 24/7.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={handleChatWithAIrene}
+              className="inline-flex items-center justify-center gap-2 bg-white text-[#FF6600] font-bold px-8 py-4 rounded-full hover:bg-white/90 transition-colors text-lg"
+            >
+              💬 Chat with AIrene
+            </button>
+            <button
+              onClick={handleWhatsApp}
+              className="inline-flex items-center justify-center gap-2 bg-white/20 text-white font-bold px-8 py-4 rounded-full hover:bg-white/30 transition-colors text-lg border-2 border-white/40"
+            >
+              📞 WhatsApp Us
+            </button>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 bg-slate-900">
-        <div className="container mx-auto px-4 text-center">
+      <footer className="py-8 bg-slate-900 text-center">
+        <div className="container mx-auto px-4">
           <div className="flex items-center justify-center gap-3 mb-3">
-            <img 
-              src="/amr-logo.jpg" 
-              alt="AMR Home Solutions" 
-              className="w-12 h-12 object-contain"
-            />
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-[#FF6600]">AMR Home Solutions</span>
-              <span className="text-sm text-slate-500 font-medium">Your One Stop Real Estate Centre</span>
-            </div>
+            <img src="/amr-logo.jpg" alt="AMR" className="w-10 h-10 object-contain rounded" />
+            <span className="text-lg font-bold text-[#FF6600]">AMR Home Solutions</span>
           </div>
+          <p className="text-slate-500 text-xs mb-1">{SSM_NUMBER}</p>
           <p className="text-slate-500 text-xs">© 2026 AMR Home Solutions. All rights reserved.</p>
         </div>
       </footer>
