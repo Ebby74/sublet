@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Room {
   id: string;
@@ -127,6 +128,7 @@ const steps = [
 ];
 
 export default function MockupPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState('all');
 
   const filtered = filter === 'all'
@@ -229,7 +231,10 @@ export default function MockupPage() {
                 className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-slate-100"
               >
                 {/* Image */}
-                <div className="relative h-52 overflow-hidden">
+                <div
+                  className="relative h-52 overflow-hidden cursor-pointer"
+                  onClick={() => router.push(`/mockup/rooms/${room.id}`)}
+                >
                   <img
                     src={room.img}
                     alt={room.title}
