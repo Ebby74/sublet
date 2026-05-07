@@ -7,7 +7,7 @@ import { ShareButton } from '@/components/ui/share-button';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-const SSM_NUMBER = 'SSM: 2026XXXXXXX';
+const SSM_NUMBER = 'SSM: 201803387155 (002908967-W)';
 
 interface Room {
   id: string;
@@ -347,7 +347,7 @@ function RoomDetailContent({ id }: { id: string }) {
             Chat with AIrene
           </Link>
           <a
-            href={`https://wa.me/60123456789?text=${encodeURIComponent(`Hi, I'm interested in ${room.name} at ${propertyName}`)}`}
+            href={`https://wa.me/60132071626?text=${encodeURIComponent(`Hi, I'm interested in ${room.name} at ${propertyName}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 inline-flex items-center justify-center gap-2 bg-white border border-neutral-300 text-neutral-700 hover:border-[#FF6600] hover:text-[#FF6600] font-medium py-2.5 px-5 rounded-sm transition-colors text-sm"

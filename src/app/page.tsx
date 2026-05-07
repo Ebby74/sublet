@@ -8,8 +8,8 @@ import type { FC } from 'react';
 import { trackEvent } from '@/lib/analytics';
 import { ShareButton } from '@/components/ui/share-button';
 
-const SSM_NUMBER = 'SSM: 2026XXXXXXX';
-const WHATSAPP_NUMBER = '60123456789';
+const SSM_NUMBER = 'SSM: 201803387155 (002908967-W)';
+const WHATSAPP_NUMBER = '60132071626';
 
 interface User {
   id: string;
