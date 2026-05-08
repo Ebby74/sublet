@@ -392,6 +392,106 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* What You Get */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <h3 className="text-3xl font-bold text-center mb-4 text-slate-800">No Designer Gimmicks. Everything You Actually Need.</h3>
+          <p className="text-center text-slate-500 mb-12 max-w-lg mx-auto">We don&apos;t do Instagram-worthy interiors. We provide clean, fully furnished rooms in proper houses with all the essentials — at a fair price.</p>
+
+          {/* Keramat Flagship */}
+          <div className="max-w-3xl mx-auto mb-12 bg-gradient-to-br from-slate-50 to-orange-50 rounded-2xl p-8 border-2 border-[#FF6600]/20">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="bg-[#FF6600] text-white text-xs font-bold px-3 py-1 rounded-full">FLAGSHIP</span>
+              <h4 className="text-xl font-bold text-slate-800">3-Storey Bungalow, Keramat</h4>
+            </div>
+            <p className="text-slate-600 mb-6 text-sm">Converted to 3 separate houses, each floor self-contained with shared living areas. 2 LRT stops to KLCC.</p>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h5 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">In Your Room</h5>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>40mm steel uni-spec single bed (heavy-duty, built to last)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>Rubber mattress (not thin foam)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>Ceiling fan</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>Curtains</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>2 lockers (4 for shared rooms)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>Prayer space next to bed</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h5 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">Shared Areas</h5>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>Full kitchen with 2-burner stove</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>Large 2-door refrigerator</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>7L washing machine</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>TV &amp; sofa in living area</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>Free WiFi</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#FF6600] mt-0.5">▸</span>
+                    <span>Multiple bathrooms per floor (squat + sitting)</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Other locations - basic */}
+          <div className="max-w-3xl mx-auto mb-10 bg-slate-50 rounded-2xl p-6 border border-slate-100">
+            <h4 className="font-bold text-slate-700 mb-2 text-center">Other Locations</h4>
+            <p className="text-slate-500 text-sm text-center">Pandan Jaya, Setapak, and Ampang rooms come with similar essentials — bed, fan, curtains, storage, and shared kitchen. Details vary by house. Full specs shown when you inquire.</p>
+          </div>
+
+          {/* Honest comparison */}
+          <div className="max-w-2xl mx-auto bg-slate-50 rounded-2xl p-6 border border-slate-200">
+            <h4 className="font-bold text-slate-800 mb-3 text-center">Why Not Cheaper? Why Not Fancier?</h4>
+            <div className="grid md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-red-500 font-semibold mb-1">Cheaper rooms (RM200–250)</p>
+                <p className="text-slate-500">Broken fans, thin foam mattress, dirty bathrooms, no maintenance. You save RM100 but live in discomfort.</p>
+              </div>
+              <div>
+                <p className="text-[#FF6600] font-semibold mb-1">Designer rooms (RM700+)</p>
+                <p className="text-slate-500">Fancy interiors you pay a premium for. Nice to look at, but you&apos;re paying for aesthetics — not better sleep.</p>
+              </div>
+            </div>
+            <p className="text-center text-slate-700 font-medium mt-4 pt-4 border-t border-slate-200">We provide quality beds, maintained facilities, and honest living at RM300–RM500. Nothing more, nothing less.</p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 bg-[#FF6600]">
         <div className="container mx-auto px-4 text-center">
