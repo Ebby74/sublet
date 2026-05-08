@@ -449,7 +449,7 @@ const LandingPage = () => {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-[#FF6600] mt-0.5">▸</span>
-                    <span>7L washing machine</span>
+                    <span>7.0kg–7.5kg washing machine</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-[#FF6600] mt-0.5">▸</span>
