@@ -10,7 +10,6 @@ const PROTECTED_ROUTES = [
   '/tenants',
   '/leases',
   '/payments',
-  '/rooms',
   '/reports',
   '/notifications',
   '/settings',
@@ -24,6 +23,7 @@ const PUBLIC_ROUTES = [
   '/inquiry',
   '/register',
   '/jv',
+  '/rooms',
 ];
 
 export async function middleware(request: NextRequest) {

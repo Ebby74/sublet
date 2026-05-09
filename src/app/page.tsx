@@ -268,16 +268,16 @@ const LandingPage = () => {
                 />
               </div>
               <div className="relative w-full flex justify-center items-center">
-                {currentRooms.map((room, i) => (
-                  <a
-                    key={i}
-                    href="/properties"
-                    onClick={() => trackEvent({ event: 'carousel_interaction', params: { room: room.title } })}
-                    className={`absolute transition-all duration-700 ease-in-out group cursor-pointer ${getPositionClass(i, activeIndex)}`}
-                    style={{ width: '200px', height: '240px' }}
-                  >
-                    <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-                      <img src={room.img} alt={room.title} className="w-full h-full object-cover" />
+                  {currentRooms.map((room, i) => (
+                    <a
+                      key={i}
+                      href={`/rooms?location=${room.location}`}
+                      onClick={() => trackEvent({ event: 'carousel_interaction', params: { room: room.title } })}
+                      className={`absolute transition-all duration-700 ease-in-out group cursor-pointer ${getPositionClass(i, activeIndex)}`}
+                      style={{ width: '200px', height: '240px' }}
+                    >
+                      <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+                        <img src={room.img} alt={room.title} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                       <div className="absolute bottom-3 left-0 right-0 text-center" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                         <p className="text-white font-bold text-sm">{room.title}</p>

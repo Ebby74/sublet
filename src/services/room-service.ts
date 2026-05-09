@@ -124,7 +124,7 @@ export async function updateRoomStatus(id: string, status: RoomStatus) {
 export async function getPublicRooms() {
   return prisma.room.findMany({
     where: {
-      status: { in: ['available', 'rented', 'maintenance'] },
+      status: 'available',
       deletedAt: null,
     },
     include: {
