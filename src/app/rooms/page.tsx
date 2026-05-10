@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 
 export const revalidate = 60;
 
-function RoomCard({ room }: { room: import('@prisma/client').Room & { floor: { property: { id: string; name: string; address: string } | null } | null } }) {
+function RoomCard({ room }: { room: import('@prisma/client').Room & { floor: { level: number; property: { id: string; name: string; address: string } | null } | null } }) {
   const photos = room.photos ? JSON.parse(room.photos) as string[] : [];
   const img = photos[0] || '';
   const propertyName = room.floor?.property?.name || '';
@@ -48,7 +48,7 @@ function RoomCard({ room }: { room: import('@prisma/client').Room & { floor: { p
           {room.floor && (
             <>
               <span className="text-slate-300">•</span>
-              <span>Floor {(room.floor as { level: number }).level}</span>
+              <span>Floor {room.floor.level}</span>
             </>
           )}
         </div>
