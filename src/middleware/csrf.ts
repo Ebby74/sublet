@@ -10,6 +10,7 @@ import {
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const AUTH_PATH_PREFIX = '/api/auth';
 const CRON_PATH_PREFIX = '/api/cron';
+const AI_PATH_PREFIX = '/api/ai';
 
 export function csrfMiddleware(request: NextRequest): NextResponse | null {
   if (SAFE_METHODS.has(request.method)) {
@@ -20,7 +21,8 @@ export function csrfMiddleware(request: NextRequest): NextResponse | null {
 
   if (
     pathname.startsWith(AUTH_PATH_PREFIX) ||
-    pathname.startsWith(CRON_PATH_PREFIX)
+    pathname.startsWith(CRON_PATH_PREFIX) ||
+    pathname.startsWith(AI_PATH_PREFIX)
   ) {
     return null;
   }
