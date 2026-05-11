@@ -54,15 +54,6 @@ IF they ask questions outside the flow, answer naturally then gently guide back 
 CURRENCY: Always use RM (Malaysian Ringgit).
 DATE FORMAT: DD/MM/YYYY for any dates you mention.`;
 
-export async function GET() {
-  const key = process.env.GROQ_API_KEY;
-  return NextResponse.json({
-    exists: !!key,
-    length: key ? key.length : 0,
-    prefix: key ? key.substring(0, 4) : null,
-  });
-}
-
 export async function POST(req: NextRequest) {
   const log = withRequestContext(req, { route: 'ai/chat' });
   try {
