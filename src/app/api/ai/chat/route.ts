@@ -16,6 +16,13 @@ const ChatRequestSchema = z.object({
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
+export async function GET() {
+  return NextResponse.json({
+    exists: !!process.env.GROQ_API_KEY,
+    length: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.length : 0,
+  });
+}
+
 const SYSTEM_PROMPT = `You are AIrene, the AI rental assistant for AMR Home Solutions — a co-living room rental platform in Kuala Lumpur, Malaysia.
 
 YOUR ROLE:
