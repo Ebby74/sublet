@@ -1,12 +1,15 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { prisma } from '@/lib/prisma';
 import { getRoom } from './room-service';
 
-const getGenAI = () => {
-  if (!process.env.GOOGLE_GEMINI_API_KEY) {
-    throw new Error('Missing GOOGLE_GEMINI_API_KEY');
+const getGroq = () => {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error('Missing GROQ_API_KEY');
   }
-  return new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
+  return new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: 'https://api.groq.com/openai/v1',
+  });
 };
 
 interface RoomDetails {
@@ -72,24 +75,26 @@ export async function generateRoomDescription(
   const prompt = buildPrompt(details);
 
   try {
-    let genAI;
+    let groq;
     try {
-      genAI = getGenAI();
+      groq = getGroq();
     } catch {
-      return { success: false, error: 'Gemini not configured' };
+      return { success: false, error: 'Groq not configured' };
     }
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      systemInstruction: 'You are a professional property copywriter. Write compelling rental descriptions.',
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional property copywriter. Write compelling rental descriptions.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      max_tokens: 300,
     });
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 300 },
-    });
-
-    const description = result.response?.text();
+    const description = completion.choices[0]?.message?.content;
     if (!description) {
       return { success: false, error: 'No response from AI' };
     }

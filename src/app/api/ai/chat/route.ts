@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { z } from 'zod';
 import { withRequestContext } from '@/lib/logger';
 
@@ -15,11 +15,14 @@ const ChatRequestSchema = z.object({
   roomId: z.string().uuid().optional(),
 });
 
-const getGenAI = () => {
-  if (!process.env.GOOGLE_GEMINI_API_KEY) {
-    throw new Error('Missing GOOGLE_GEMINI_API_KEY');
+const getGroq = () => {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error('Missing GROQ_API_KEY');
   }
-  return new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
+  return new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: 'https://api.groq.com/openai/v1',
+  });
 };
 
 const SYSTEM_PROMPT = `You are AIrene, the AI rental assistant for AMR Home Solutions — a co-living room rental platform in Kuala Lumpur, Malaysia.
@@ -75,39 +78,31 @@ export async function POST(req: NextRequest) {
 
     const { message, history = [], step = 0 } = parsed.data;
 
-    let genAI;
+    let groq;
     try {
-      genAI = getGenAI();
+      groq = getGroq();
     } catch {
       return NextResponse.json({
         reply: `Hi there! I'd love to help you find a room. Our rooms range from RM 450 to RM 950 per month across several locations in KL. What's your name so I can assist you better?`,
       });
     }
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      systemInstruction: step !== undefined
-        ? `${SYSTEM_PROMPT}\n\nCurrent conversation step: ${step}. Respond accordingly.`
-        : SYSTEM_PROMPT,
+    const contextualPrompt = step !== undefined
+      ? `${SYSTEM_PROMPT}\n\nCurrent conversation step: ${step}. Respond accordingly.`
+      : SYSTEM_PROMPT;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: contextualPrompt },
+        ...history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        { role: 'user', content: message },
+      ],
+      max_tokens: 300,
+      temperature: 0.7,
     });
 
-    const contents = [
-      ...history.map(m => ({
-        role: m.role === 'assistant' ? 'model' as const : 'user' as const,
-        parts: [{ text: m.content }],
-      })),
-      { role: 'user' as const, parts: [{ text: message }] },
-    ];
-
-    const result = await model.generateContent({
-      contents,
-      generationConfig: {
-        maxOutputTokens: 300,
-        temperature: 0.7,
-      },
-    });
-
-    const reply = result.response?.text()
+    const reply = completion.choices[0]?.message?.content
       || 'I\'m here to help! Could you tell me more about what kind of room you\'re looking for?';
 
     return NextResponse.json({ reply, step });
