@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import { withRequestContext } from '@/lib/logger';
 
@@ -15,13 +15,11 @@ const ChatRequestSchema = z.object({
   roomId: z.string().uuid().optional(),
 });
 
-const getOpenAI = () => {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('Missing OPENAI_API_KEY');
+const getGenAI = () => {
+  if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    throw new Error('Missing GOOGLE_GEMINI_API_KEY');
   }
-  return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  return new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
 };
 
 const SYSTEM_PROMPT = `You are AIrene, the AI rental assistant for AMR Home Solutions — a co-living room rental platform in Kuala Lumpur, Malaysia.
@@ -75,36 +73,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { message, history = [], step = 0, roomId } = parsed.data;
+    const { message, history = [], step = 0 } = parsed.data;
 
-    let openai;
+    let genAI;
     try {
-      openai = getOpenAI();
+      genAI = getGenAI();
     } catch {
       return NextResponse.json({
         reply: `Hi there! I'd love to help you find a room. Our rooms range from RM 450 to RM 950 per month across several locations in KL. What's your name so I can assist you better?`,
       });
     }
 
-    const contextualPrompt = step !== undefined
-      ? `${SYSTEM_PROMPT}\n\nCurrent conversation step: ${step}. Respond accordingly.`
-      : SYSTEM_PROMPT;
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: contextualPrompt },
-        ...history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-        { role: 'user', content: message },
-      ],
-      max_tokens: 300,
-      temperature: 0.7,
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: step !== undefined
+        ? `${SYSTEM_PROMPT}\n\nCurrent conversation step: ${step}. Respond accordingly.`
+        : SYSTEM_PROMPT,
     });
 
-    const reply = completion.choices[0]?.message?.content
+    const contents = [
+      ...history.map(m => ({
+        role: m.role === 'assistant' ? 'model' as const : 'user' as const,
+        parts: [{ text: m.content }],
+      })),
+      { role: 'user' as const, parts: [{ text: message }] },
+    ];
+
+    const result = await model.generateContent({
+      contents,
+      generationConfig: {
+        maxOutputTokens: 300,
+        temperature: 0.7,
+      },
+    });
+
+    const reply = result.response?.text()
       || 'I\'m here to help! Could you tell me more about what kind of room you\'re looking for?';
 
-    return NextResponse.json({ reply, step, roomId });
+    return NextResponse.json({ reply, step });
   } catch (error) {
     log.error({ error }, 'AI chat error');
     return NextResponse.json({

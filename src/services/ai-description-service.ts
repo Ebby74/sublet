@@ -1,14 +1,12 @@
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '@/lib/prisma';
 import { getRoom } from './room-service';
 
-const getOpenAI = () => {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('Missing OPENAI_API_KEY');
+const getGenAI = () => {
+  if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    throw new Error('Missing GOOGLE_GEMINI_API_KEY');
   }
-  return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  return new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
 };
 
 interface RoomDetails {
@@ -74,31 +72,28 @@ export async function generateRoomDescription(
   const prompt = buildPrompt(details);
 
   try {
-    let openai;
+    let genAI;
     try {
-      openai = getOpenAI();
+      genAI = getGenAI();
     } catch {
-      return { success: false, error: 'OpenAI not configured' };
+      return { success: false, error: 'Gemini not configured' };
     }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional property copywriter. Write compelling rental descriptions.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: 300,
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: 'You are a professional property copywriter. Write compelling rental descriptions.',
     });
 
-    const description = completion.choices[0]?.message?.content;
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 300 },
+    });
+
+    const description = result.response?.text();
     if (!description) {
       return { success: false, error: 'No response from AI' };
     }
 
-    // Get existing history or create new
     let history: Array<{
       version: number;
       text: string;
@@ -129,10 +124,8 @@ export async function generateRoomDescription(
     };
 
     history.push(historyEntry);
-    // Keep last 10 versions only
     const trimmedHistory = history.slice(-10);
 
-    // Store the description
     await prisma.room.update({
       where: { id: roomId },
       data: {
