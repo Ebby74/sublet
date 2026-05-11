@@ -121,15 +121,15 @@ export default function InquiryPage() {
       setUserData(prev => ({ ...prev, name: userMessage }));
       setStep(1);
     } else if (step === 1) {
-      setUserData(prev => ({ ...prev, phone: userMessage }));
+      setUserData(prev => ({ ...prev, requirements: userMessage }));
       setStep(2);
     } else if (step === 2) {
+      setUserData(prev => ({ ...prev, phone: userMessage }));
+      setStep(3);
+    } else if (step === 3) {
       if (userMessage.toLowerCase() !== 'skip') {
         setUserData(prev => ({ ...prev, email: userMessage }));
       }
-      setStep(3);
-    } else if (step === 3) {
-      setUserData(prev => ({ ...prev, requirements: userMessage }));
       setStep(4);
       trackEvent({
         event: 'inquiry_complete',
@@ -140,11 +140,11 @@ export default function InquiryPage() {
     const dataToSave = step === 0
       ? { name: userMessage, phone: '', email: '', requirements: '' }
       : step === 1
-        ? { ...userData, name: userData.name || userMessage, phone: userMessage }
+        ? { ...userData, name: userData.name || userMessage, requirements: userMessage }
         : step === 2
-          ? { ...userData, email: userMessage.toLowerCase() === 'skip' ? userData.email : userMessage }
+          ? { ...userData, phone: userMessage }
           : step === 3
-            ? { ...userData, requirements: userMessage }
+            ? { ...userData, email: userMessage.toLowerCase() === 'skip' ? userData.email : userMessage }
             : userData;
 
     await saveSession(finalMessages, dataToSave, step < 4 ? step + 1 : 4);
@@ -236,9 +236,9 @@ export default function InquiryPage() {
               onKeyDown={handleKeyDown}
               placeholder={
                 step === 0 ? 'Type your name...' :
-                step === 1 ? 'e.g., +60123456789' :
-                step === 2 ? 'email@domain.com or "skip"' :
-                step === 3 ? 'e.g., Near LRT Damai, RM600-800, move in May' :
+                step === 1 ? 'e.g., Near LRT, RM600-800, single room, near work' :
+                step === 2 ? 'e.g., +60123456789' :
+                step === 3 ? 'email@domain.com or "skip"' :
                 'Type here...'
               }
               className="flex-1"
