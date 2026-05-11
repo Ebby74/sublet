@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { z } from 'zod';
 import { withRequestContext } from '@/lib/logger';
 
@@ -15,15 +14,7 @@ const ChatRequestSchema = z.object({
   roomId: z.string().uuid().optional(),
 });
 
-const getGroq = () => {
-  if (!process.env.GROQ_API_KEY) {
-    throw new Error('Missing GROQ_API_KEY');
-  }
-  return new OpenAI({
-    apiKey: process.env.GROQ_API_KEY,
-    baseURL: 'https://api.groq.com/openai/v1',
-  });
-};
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const SYSTEM_PROMPT = `You are AIrene, the AI rental assistant for AMR Home Solutions — a co-living room rental platform in Kuala Lumpur, Malaysia.
 
@@ -78,10 +69,8 @@ export async function POST(req: NextRequest) {
 
     const { message, history = [], step = 0 } = parsed.data;
 
-    let groq;
-    try {
-      groq = getGroq();
-    } catch {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
       return NextResponse.json({
         reply: `Hi there! I'd love to help you find a room. Our rooms range from RM 450 to RM 950 per month across several locations in KL. What's your name so I can assist you better?`,
       });
@@ -91,18 +80,36 @@ export async function POST(req: NextRequest) {
       ? `${SYSTEM_PROMPT}\n\nCurrent conversation step: ${step}. Respond accordingly.`
       : SYSTEM_PROMPT;
 
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: contextualPrompt },
-        ...history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-        { role: 'user', content: message },
-      ],
-      max_tokens: 300,
-      temperature: 0.7,
+    const messages = [
+      { role: 'system', content: contextualPrompt },
+      ...history.map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: message },
+    ];
+
+    const response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages,
+        max_tokens: 300,
+        temperature: 0.7,
+      }),
     });
 
-    const reply = completion.choices[0]?.message?.content
+    if (!response.ok) {
+      const errorText = await response.text();
+      log.error({ status: response.status, error: errorText }, 'Groq API error');
+      return NextResponse.json({
+        reply: 'I\'m having trouble connecting right now. Please try again in a moment!',
+      });
+    }
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content
       || 'I\'m here to help! Could you tell me more about what kind of room you\'re looking for?';
 
     return NextResponse.json({ reply, step });

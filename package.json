@@ -27,7 +27,6 @@
     "next": "^16.0.0",
     "next-auth": "^4.24.14",
     "nodemailer": "^7.0.13",
-    "openai": "^6.37.0",
     "papaparse": "^5.5.3",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",

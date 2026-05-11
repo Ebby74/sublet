@@ -1,16 +1,7 @@
-import OpenAI from 'openai';
 import { prisma } from '@/lib/prisma';
 import { getRoom } from './room-service';
 
-const getGroq = () => {
-  if (!process.env.GROQ_API_KEY) {
-    throw new Error('Missing GROQ_API_KEY');
-  }
-  return new OpenAI({
-    apiKey: process.env.GROQ_API_KEY,
-    baseURL: 'https://api.groq.com/openai/v1',
-  });
-};
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 interface RoomDetails {
   name: string;
@@ -75,26 +66,36 @@ export async function generateRoomDescription(
   const prompt = buildPrompt(details);
 
   try {
-    let groq;
-    try {
-      groq = getGroq();
-    } catch {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
       return { success: false, error: 'Groq not configured' };
     }
 
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional property copywriter. Write compelling rental descriptions.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      max_tokens: 300,
+    const response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a professional property copywriter. Write compelling rental descriptions.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: 300,
+      }),
     });
 
-    const description = completion.choices[0]?.message?.content;
+    if (!response.ok) {
+      return { success: false, error: 'Failed to get AI response' };
+    }
+
+    const data = await response.json();
+    const description = data.choices?.[0]?.message?.content;
     if (!description) {
       return { success: false, error: 'No response from AI' };
     }
