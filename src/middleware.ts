@@ -95,14 +95,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect authenticated users away from login page
-  if (isPublic && pathname.startsWith('/auth/')) {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (token) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-  }
-
   return NextResponse.next();
 }
 
