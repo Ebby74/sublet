@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Building2, Users, FileText, Settings, LogOut, Upload, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, FileText, Settings, LogOut, Upload, Megaphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/lib/i18n';
@@ -17,6 +17,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard },
   { href: '/properties', labelKey: 'nav.properties', icon: Building2 },
+  { href: '/marketing', labelKey: 'nav.marketing', icon: Megaphone },
   { href: '/tenants', labelKey: 'nav.tenants', icon: Users },
   { href: '/payments', labelKey: 'nav.payments', icon: FileText },
   { 

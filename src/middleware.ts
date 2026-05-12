@@ -15,6 +15,7 @@ const PROTECTED_ROUTES = [
   '/settings',
   '/prospects',
   '/import',
+  '/marketing',
 ];
 
 const PUBLIC_ROUTES = [
