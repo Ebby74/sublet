@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { parseSessionCookie } from '@/lib/session';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: Request) {
-  const sessionId = parseSessionCookie(request.headers.get('cookie'));
+export async function GET() {
+  const session = await getServerSession(authOptions);
 
-  if (!sessionId) {
+  if (!session?.user?.id) {
     return NextResponse.json(
       { data: null, error: 'Not authenticated' },
       { status: 401 }
@@ -13,13 +14,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    const session = JSON.parse(Buffer.from(sessionId, 'base64').toString());
     const user = await prisma.user.findUnique({
-      where: { id: session.userId },
+      where: { id: session.user.id },
       select: {
         id: true,
         email: true,
         name: true,
+        role: true,
         createdAt: true,
       },
     });
